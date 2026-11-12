@@ -216,7 +216,7 @@ const Page = () => {
                         key={activeTab}
                         className="min-w-0 animate-tab-fade-in"
                     >
-                        {isLoading && !user ? <SkContent /> : (
+                        {!mounted || (isLoading && !user) ? <SkContent /> : (
                             <>
                                 {activeTab === 'thong-tin' && <ThongTinTaiKhoanTab />}
                                 {activeTab === 'lich-su-don-hang' && <LichSuDonHangTab />}
