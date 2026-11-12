@@ -1,0 +1,32 @@
+﻿{
+  "profiles": {
+    "Seeme": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "seeme",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:7266;http://localhost:5274",
+      "hotReloadEnabled": false
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "launchUrl": "seeme",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:11781",
+      "sslPort": 44331
+    }
+  }
+}

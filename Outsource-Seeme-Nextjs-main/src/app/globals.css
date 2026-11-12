@@ -1,0 +1,500 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+  font-size: 14px;
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+body {
+  overflow-x: clip;
+}
+
+.seeme-map-pin {
+  transform-origin: 50% 88%;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.seeme-map4d-marker {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.seeme-map-tree-marker {
+  transform-origin: 50% 88%;
+  transition: filter 160ms ease, opacity 160ms ease, transform 160ms ease;
+  will-change: transform;
+}
+
+.seeme-map-tree-marker:hover {
+  filter: drop-shadow(0 10px 16px rgba(47, 68, 19, 0.28));
+  transform: translateY(-2px) scale(1.08);
+}
+
+.seeme-map-tree-marker.is-active {
+  transform: translateY(-3px) scale(1.08);
+}
+
+.seeme-map-tree-marker.is-active:hover {
+  transform: translateY(-4px) scale(1.12);
+}
+
+.seeme-map-pin.is-active {
+  filter: drop-shadow(0 10px 18px rgba(47, 85, 20, 0.3));
+  transform: scale(1.06);
+}
+
+[data-map4d-tea-map] {
+  font-family: var(--font-inter);
+}
+
+:root {
+  --seeme-green-950: #1E2812;
+  --seeme-green-900: #23340D;
+  --seeme-green-800: #2F5514;
+  --seeme-green-700: #3B5518;
+  --seeme-olive-700: #6F8532;
+  --seeme-olive-600: #7B953E;
+  --seeme-olive-500: #7F9635;
+  --seeme-sand-300: #DCCFB4;
+  --seeme-sand-200: #DED1B9;
+  --seeme-cream-100: #F8F7F0;
+  --seeme-cream-200: #F4F0E4;
+  --seeme-mint-100: #EEF2E4;
+  --seeme-mint-200: #DDEBAA;
+  --seeme-border: #A7B36E;
+  --seeme-danger: #DC2626;
+  --seeme-panel-gradient: linear-gradient(90deg, #2F5514 0%, #1E2812 100%);
+  --background: #ffffff;
+  --foreground: var(--seeme-green-700);
+  --font-inter: 'Inter', Arial, Helvetica, sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-source-serif-4: var(--font-source-serif), "Source Serif 4", serif;
+  --color-primary: var(--seeme-green-700);
+  --color-seeme-primary: var(--seeme-green-700);
+  --color-seeme-primary-dark: var(--seeme-green-950);
+  --color-seeme-accent: var(--seeme-olive-600);
+  --color-seeme-accent-hover: var(--seeme-olive-700);
+  --color-seeme-muted: var(--seeme-olive-500);
+  --color-seeme-sand: var(--seeme-sand-300);
+  --color-seeme-sand-light: var(--seeme-sand-200);
+  --color-seeme-cream: var(--seeme-cream-200);
+  --color-seeme-input: var(--seeme-mint-100);
+}
+
+/* Định nghĩa Inter Variable Font Regular */
+@font-face {
+  font-family: 'Inter';
+  src: url('../../public/font/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Định nghĩa Inter Variable Font Italic */
+@font-face {
+  font-family: 'Inter';
+  src: url('../../public/font/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.seeme-page-bg {
+  background-color: var(--seeme-sand-300);
+  color: var(--seeme-green-700);
+}
+
+.seeme-section-bg {
+  background-color: var(--seeme-sand-200);
+  color: var(--seeme-green-700);
+}
+
+.seeme-panel-dark {
+  background: var(--seeme-panel-gradient);
+  color: var(--seeme-cream-200);
+}
+
+.seeme-card-light {
+  border: 1px solid rgba(167, 179, 110, 0.42);
+  background: var(--seeme-cream-200);
+  color: var(--seeme-green-700);
+}
+
+.seeme-heading {
+  color: var(--seeme-green-700);
+  font-family: "Source Serif 4", serif;
+  line-height: 1;
+}
+
+.seeme-heading-on-dark {
+  color: var(--seeme-cream-200);
+  font-family: "Source Serif 4", serif;
+  line-height: 1;
+}
+
+.seeme-muted-on-dark {
+  color: rgba(244, 240, 228, 0.72);
+}
+
+.seeme-muted {
+  color: rgba(59, 85, 24, 0.68);
+}
+
+/* Nhịp nội dung bài tin tức: Tailwind preflight đã reset margin nên chữ và ảnh
+ * trong nội dung HTML từ CMS dính sát nhau (rõ nhất trên điện thoại). Riêng
+ * khung này tự thêm khoảng thở; không ảnh hưởng trang khác. Ảnh trong bài cũng
+ * không phình theo cột ở màn hình rộng mà dừng ở 800px như ảnh bìa, cao tối đa
+ * 75% chiều cao màn hình, và căn giữa cho cân đối. */
+.blog-content p {
+  margin: 0 0 1rem;
+}
+
+.blog-content h2,
+.blog-content h3,
+.blog-content h4 {
+  margin: 1.5rem 0 0.75rem;
+  line-height: 1.3;
+}
+
+.blog-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 75vh;
+  margin: 1.5rem auto;
+  border-radius: 0.75rem;
+}
+
+.blog-content figure {
+  margin: 1.5rem 0;
+}
+
+.blog-content figure img {
+  margin: 0 auto;
+}
+
+.blog-content ul,
+.blog-content ol {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+}
+
+.blog-content li {
+  margin-bottom: 0.25rem;
+}
+
+@media (min-width: 1024px) {
+  .blog-content img {
+    max-width: 800px;
+  }
+}
+
+.seeme-input {
+  width: 100%;
+  border: 1px solid var(--seeme-border);
+  border-radius: 8px;
+  background: var(--seeme-cream-100);
+  color: var(--seeme-green-700);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.seeme-input::placeholder {
+  color: rgba(59, 85, 24, 0.42);
+}
+
+.seeme-input:focus {
+  border-color: var(--seeme-green-700);
+  box-shadow: 0 0 0 3px rgba(59, 85, 24, 0.16);
+}
+
+.seeme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.12s ease, opacity 0.2s ease;
+}
+
+.seeme-btn:active {
+  transform: scale(0.98);
+}
+
+.seeme-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+  transform: none;
+}
+
+.seeme-btn-primary {
+  border: 1px solid var(--seeme-olive-600);
+  background: var(--seeme-olive-600);
+  color: #ffffff;
+}
+
+.seeme-btn-primary:hover:not(:disabled) {
+  background: var(--seeme-olive-700);
+  border-color: var(--seeme-olive-700);
+}
+
+.seeme-btn-dark {
+  border: 1px solid var(--seeme-green-700);
+  background: var(--seeme-green-700);
+  color: var(--seeme-cream-200);
+}
+
+.seeme-btn-dark:hover:not(:disabled) {
+  background: #4A6720;
+}
+
+.seeme-btn-outline {
+  border: 1px solid currentColor;
+  background: transparent;
+  color: var(--seeme-green-700);
+}
+
+.seeme-btn-outline:hover:not(:disabled) {
+  background: rgba(59, 85, 24, 0.1);
+}
+
+.seeme-btn-plain {
+  border: 0;
+  background: transparent;
+  color: var(--seeme-green-700);
+}
+
+.account-panel {
+  background: var(--seeme-panel-gradient);
+  color: var(--seeme-cream-200);
+}
+
+.account-tab-pill {
+  border: 1px solid rgba(59, 85, 24, 0.16);
+  background: rgba(244, 240, 228, 0.78);
+  color: var(--seeme-green-700);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.account-tab-pill-active {
+  border-color: var(--seeme-green-700);
+  background: var(--seeme-green-700);
+  color: var(--seeme-cream-200);
+  box-shadow: 0 8px 18px rgba(30, 40, 18, 0.14);
+}
+
+button,
+select,
+[role='button'] {
+  cursor: pointer;
+}
+
+@keyframes tab-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-tab-fade-in {
+  animation: tab-fade-in 0.22s ease both;
+}
+
+/* ─── Scrollbar - chỉ style cho các container nội bộ (CMS table…) ── */
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #7F9635 #EEF2E4;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: #EEF2E4;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #7F9635;
+  border-radius: 10px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #6F8532;
+}
+
+/* ─── Shimmer (skeleton) ─────────────────────────────────── */
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 25%, rgba(255, 255, 255, 0.18) 50%, rgba(255, 255, 255, 0.06) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+/* ─── Cart badge pop animation ──────────────────────────── */
+@keyframes cart-badge-pop {
+  0%   { transform: scale(1); }
+  28%  { transform: scale(1.55); }
+  55%  { transform: scale(0.82); }
+  78%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.cart-badge-pop {
+  animation: cart-badge-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ─── Nav link underline hover/active ───────────────────── */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 100%;
+  height: 2px;
+  background: #7F9635;
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.nav-link-active::after {
+  transform: scaleX(1) !important;
+}
+
+.nav-link-active {
+  color: #3B5518 !important;
+  font-weight: 600 !important;
+}
+
+/* ─── Card hover lift ────────────────────────────────────── */
+.card-hover {
+  transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(59,85,24,0.25);
+}
+
+/* ─── Category filter button ─────────────────────────────── */
+.category-btn {
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-btn:hover {
+  transform: scale(1.04);
+}
+
+.category-btn:active {
+  transform: scale(0.97);
+}
+
+/* ─── Button press feel ──────────────────────────────────── */
+.btn-press {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn-press:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59,85,24,0.3);
+}
+
+.btn-press:active {
+  transform: scale(0.97) translateY(0);
+}
+
+/* ─── Smooth image load ──────────────────────────────────── */
+img {
+  transition: opacity 0.35s ease;
+}
+
+/* ─── Page loading bar ───────────────────────────────────── */
+@keyframes loading-bar {
+  0% {
+    width: 0%;
+    opacity: 1;
+  }
+
+  70% {
+    width: 85%;
+    opacity: 1;
+  }
+
+  100% {
+    width: 100%;
+    opacity: 0;
+  }
+}
+
+.page-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7F9635, #3B5518);
+  z-index: 9999;
+  animation: loading-bar 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Hiệu ứng mở mượt cho dropdown/mega menu (không dùng plugin animation). */
+@keyframes seeme-menu-pop {
+    from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.seeme-menu-pop { animation: seeme-menu-pop 180ms ease-out both; transform-origin: top right; }
+@keyframes seeme-mega-pop {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.seeme-mega-pop { animation: seeme-mega-pop 220ms ease-out both; }
