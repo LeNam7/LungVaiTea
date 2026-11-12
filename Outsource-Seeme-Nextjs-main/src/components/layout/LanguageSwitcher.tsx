@@ -19,28 +19,26 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className = '' }) =
             <button
                 type="button"
                 onClick={() => setLocale('vi')}
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 font-medium transition-all duration-200 cursor-pointer ${
+                className={`flex items-center justify-center rounded-full px-2.5 py-1 font-semibold tracking-wide transition-all duration-200 cursor-pointer ${
                     locale === 'vi'
                         ? 'bg-[#3B5518] text-[#DED1B9] shadow-sm'
                         : 'text-[#3B5518] hover:text-[#2A3E10] hover:bg-[#3B5518]/10'
                 }`}
                 title="Tiếng Việt"
             >
-                <span>🇻🇳</span>
-                <span>VN</span>
+                VN
             </button>
             <button
                 type="button"
                 onClick={() => setLocale('en')}
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 font-medium transition-all duration-200 cursor-pointer ${
+                className={`flex items-center justify-center rounded-full px-2.5 py-1 font-semibold tracking-wide transition-all duration-200 cursor-pointer ${
                     locale === 'en'
                         ? 'bg-[#3B5518] text-[#DED1B9] shadow-sm'
                         : 'text-[#3B5518] hover:text-[#2A3E10] hover:bg-[#3B5518]/10'
                 }`}
                 title="English"
             >
-                <span>🇬🇧</span>
-                <span>EN</span>
+                EN
             </button>
         </div>
     );
