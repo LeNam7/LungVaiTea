@@ -198,6 +198,27 @@ namespace Seeme.API.Controllers
         }
 
         /// <summary>
+        /// Cập nhật số tiền đã thanh toán của đơn hàng (admin đối soát tay)
+        /// </summary>
+        [HttpPut("payment/{orderId}")]
+        public async Task<ActionResult> UpdateOrderPayment(int orderId, [FromBody] int totalPayment)
+        {
+            try
+            {
+                var res = await _orderService.UpdateOrderPaymentAsync(orderId, totalPayment);
+                if (res.StatusCode != StatusCodes.Status200OK)
+                {
+                    return StatusCode(res.StatusCode, res.Message);
+                }
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Xảy ra lỗi trong quá trình xử lý: \n" + ex.Message + ex.StackTrace);
+            }
+        }
+
+        /// <summary>
         /// Lấy Lịch sử đơn hàng cây trà theo Id đơn hàng
         /// </summary>
         [HttpGet("teas/history")]

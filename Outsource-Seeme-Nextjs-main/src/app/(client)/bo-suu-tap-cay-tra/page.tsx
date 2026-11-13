@@ -137,7 +137,8 @@ function getCompactRecommendedPages(currentPage: number, totalPages: number): (n
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const Page = () => {
-    const {t} = useLanguage();
+    const {t, locale} = useLanguage();
+    const isEn = locale === 'en';
     const [gardensWithTeas, setGardensWithTeas] = useState<GardenWithTeas[]>([]);
     const [allTeas, setAllTeas] = useState<Tea[]>([]);
     const [loading, setLoading] = useState(true);
@@ -282,8 +283,8 @@ const Page = () => {
     }, [ageFilter, allTeas]);
 
     const gardenNameById = useMemo(
-        () => new Map(gardensWithTeas.map((garden) => [garden.id, formatGardenCode(garden)])),
-        [gardensWithTeas],
+        () => new Map(gardensWithTeas.map((garden) => [garden.id, formatGardenDisplay(garden, locale)])),
+        [gardensWithTeas, locale],
     );
 
     const mapPins: Pin[] = useMemo(
@@ -293,24 +294,24 @@ const Page = () => {
                 .map((t) => ({
                     lat: t.lat!,
                     lng: t.long!,
-                    label: t.name ?? `Cây #${t.id}`,
-                    code: t.name ?? `#${t.id}`,
+                    label: isEn && t.nameEn?.trim() ? t.nameEn : (t.name ?? `Cây #${t.id}`),
+                    code: isEn && t.nameEn?.trim() ? t.nameEn : (t.name ?? `#${t.id}`),
                     image: getFirstImage(t.images),
                     imagesRaw: t.images,
                     price: formatTeaCost(t),
                     priceValue: t.price ?? 0,
                     volume: t.volume,
-                    type: t.type,
-                    yieldInfo: t.volume && t.volume > 0 ? `${t.volume.toLocaleString('vi-VN')} kg/năm` : undefined,
+                    type: isEn && t.typeEn?.trim() ? t.typeEn : t.type,
+                    yieldInfo: t.volume && t.volume > 0 ? (isEn ? `${t.volume.toLocaleString('en-US')} kg/year` : `${t.volume.toLocaleString('vi-VN')} kg/năm`) : undefined,
                     teaId: t.id,
                     gardenId: t.gardenId,
                     yearOld: t.yearOld,
                     gardenName: gardenNameById.get(t.gardenId),
-                    description: t.description ? formatTeaDescription(t.description) : undefined,
+                    description: isEn && t.descriptionEn?.trim() ? t.descriptionEn : (t.description ? formatTeaDescription(t.description) : undefined),
                     sold: t.sold ?? false,
                     available: isTeaPurchasable(t) || isTeaContactPrice(t),
                 })),
-        [gardenNameById, mapTeas],
+        [gardenNameById, mapTeas, isEn],
     );
 
     // Khoanh cả 3 vườn trên bản đồ: vườn đang chọn nét liền, các vườn còn lại nét đứt.
@@ -406,7 +407,7 @@ const Page = () => {
                 </div>
             ) : null}
             {/* Map + Sidebar */}
-            <section className="relative z-0 flex flex-col overflow-hidden border-y border-[#d0c4a6] bg-[#DED1B9] lg:h-[min(760px,calc(100vh-88px))] lg:min-h-[560px] lg:flex-row">
+            <section className="relative z-0 flex flex-col overflow-hidden border-y border-[#d0c4a6] bg-[#DED1B9] lg:h-[min(760px,calc(100vh-70px))] lg:min-h-[560px] lg:flex-row">
                 {/* Map area */}
                 <div className="relative flex-1 overflow-hidden bg-[#F1EEE0]">
                     <div className="h-full overflow-hidden">
@@ -459,7 +460,7 @@ const Page = () => {
                                                   : 'border-white text-[#3B5518] hover:border-[#7B943E]'
                                           }`}
                                       >
-                                          <div className="line-clamp-1 text-sm font-semibold">{formatGardenDisplay(g)}</div>
+                                          <div className="line-clamp-1 text-sm font-semibold">{formatGardenDisplay(g, locale)}</div>
                                           <div className="mt-1 text-xs opacity-85">
                                               {g.totalAvailableCount}/{g.totalCount} {t('treePage.availableToBuy', 'cây có thể mua')}
                                           </div>
@@ -491,19 +492,19 @@ const Page = () => {
                             <>
                                 <div className="mb-2 flex items-center gap-2">
                                     <h2 className="font-source-serif-4 text-2xl leading-tight text-[#3B5518]">
-                                        {activeGarden ? formatGardenDisplay(activeGarden) : t('treePage.allGardens', 'Tất cả vườn trà')}
+                                        {activeGarden ? formatGardenDisplay(activeGarden, locale) : t('treePage.allGardens', 'Tất cả vườn trà')}
                                     </h2>
                                 </div>
                                 <p className="text-xs leading-5 text-[#496526]">
                                     {activeGarden
-                                        ? (activeGarden.address ?? '')
+                                        ? (isEn && activeGarden.addressEn?.trim() ? activeGarden.addressEn : (activeGarden.address ?? ''))
                                         : `${gardensWithTeas.length} ${t('treePage.gardensCount', 'vườn')} · ${gardensWithTeas.reduce((sum, g) => sum + g.totalAvailableCount, 0)}/${gardensWithTeas.reduce((sum, g) => sum + g.totalCount, 0)} ${t('treePage.availableToBuy', 'cây có thể mua')}`}
                                 </p>
                                 {activeGarden ? (
                                     <div className="mt-3 rounded-lg bg-white/60 px-3 py-2.5">
                                         {activeGarden.description?.trim() ? (
                                             <p className="text-xs leading-5 text-[#3B5518]/90">
-                                                {activeGarden.description.trim()}
+                                                {isEn && activeGarden.descriptionEn?.trim() ? activeGarden.descriptionEn.trim() : activeGarden.description.trim()}
                                             </p>
                                         ) : null}
                                         <p className="mt-2 text-xs text-[#6b8132]">
@@ -588,19 +589,31 @@ const Page = () => {
                                                       : 'hover:bg-white/70'
                                             }`}
                                         >
-                                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_5px_12px_rgba(47,68,19,0.1)]">
-                                                <TreeBadgeIcon />
+                                            <span className="flex h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#7B943E]/30 bg-white shadow-[0_5px_12px_rgba(47,68,19,0.1)]">
+                                                {tea.images ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img
+                                                        src={getFirstImage(tea.images)}
+                                                        alt={tea.name ?? ''}
+                                                        className="h-full w-full object-cover"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = 'none';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <TreeBadgeIcon />
+                                                )}
                                             </span>
                                             <div className="flex-1 min-w-0">
                                                 <p className="line-clamp-2 text-sm font-semibold leading-snug">
-                                                    {tea.name}
+                                                    {isEn && tea.nameEn?.trim() ? tea.nameEn : tea.name}
                                                 </p>
                                                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-[#6b8132]">
                                                     <span>#{tea.id}</span>
                                                     {tea.volume && tea.volume > 0 ? (
-                                                        <span>{tea.volume.toLocaleString('vi-VN')} {t('treePage.kgPerYear', 'kg/năm')}</span>
+                                                        <span>{tea.volume.toLocaleString(isEn ? 'en-US' : 'vi-VN')} {t('treePage.kgPerYear', 'kg/năm')}</span>
                                                     ) : null}
-                                                    {tea.type ? <span>{t('treePage.type', 'Loại')} {tea.type}</span> : null}
+                                                    {tea.type ? <span>{t('treePage.type', 'Loại')} {isEn && tea.typeEn?.trim() ? tea.typeEn : tea.type}</span> : null}
                                                     {tea.sold ? <span>{t('treePage.sold', 'Đã bán')}</span> : null}
                                                 </div>
                                             </div>
@@ -686,15 +699,15 @@ const Page = () => {
                                   key={tea.id}
                                   href={`/chi-tiet-cay-tra/${tea.id}`}
                                   imageSrc={getFirstImage(tea.images)}
-                                  code={tea.name ?? `#${tea.id}`}
-                                  name={tea.name ?? ''}
+                                  code={isEn && tea.nameEn?.trim() ? tea.nameEn : (tea.name ?? `#${tea.id}`)}
+                                  name={isEn && tea.nameEn?.trim() ? tea.nameEn : (tea.name ?? '')}
                                   price={formatTeaCost(tea)}
                                   yieldInfo={
                                       tea.volume && tea.volume > 0
-                                          ? `${tea.volume.toLocaleString('vi-VN')} kg/năm`
+                                          ? `${tea.volume.toLocaleString('vi-VN')} kg/${isEn ? 'year' : 'năm'}`
                                           : undefined
                                   }
-                                  teaType={tea.type}
+                                  teaType={isEn && tea.typeEn?.trim() ? tea.typeEn : tea.type}
                                   tag={tea.sold ? 'sold-out' : undefined}
                               />
                           ))}

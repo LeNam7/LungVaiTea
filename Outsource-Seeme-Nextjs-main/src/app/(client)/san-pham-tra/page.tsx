@@ -510,7 +510,9 @@ const PageContent = () => {
                                     }`}
                                 >
                                     <span>
-                                        <span className="block font-source-serif-4 text-[20px] leading-[32px]">{t(`teaGroups.${teaGroup.id}`, teaGroup.name)}</span>
+                                        <span className="block font-source-serif-4 text-[20px] leading-[32px]">
+                                            {locale === 'en' && teaGroup.nameEn?.trim() ? teaGroup.nameEn : t(`teaGroups.${teaGroup.id}`, teaGroup.name)}
+                                        </span>
                                         <span className={`block text-xs font-normal ${isActive ? 'text-white/80' : 'opacity-70'}`}>
                                             {loading
                                                 ? t('common.loading', 'Đang tải...')
@@ -563,7 +565,9 @@ const PageContent = () => {
                         {activeGroupData && (
                             <div className="mb-4">
                                 <div className="flex flex-wrap items-center gap-3">
-                                    <h2 className="font-source-serif-4 text-[32px] leading-[48px] text-[#3B5518]">{t(`teaGroups.${activeGroupData.id}`, activeGroupData.name)}</h2>
+                                    <h2 className="font-source-serif-4 text-[32px] leading-[48px] text-[#3B5518]">
+                                        {locale === 'en' && activeGroupData.nameEn?.trim() ? activeGroupData.nameEn : t(`teaGroups.${activeGroupData.id}`, activeGroupData.name)}
+                                    </h2>
                                     <span className="rounded-full bg-[#7B943E]/20 px-3 py-1 text-xs font-semibold text-[#3B5518]">
                                         {loading
                                             ? t('common.loading', 'Đang tải...')
@@ -573,7 +577,7 @@ const PageContent = () => {
                                     </span>
                                 </div>
                                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#3B5518]/80">
-                                    {t(`teaGroups.${activeGroupData.id}Desc`, activeGroupData.description)}
+                                    {locale === 'en' && activeGroupData.descriptionEn?.trim() ? activeGroupData.descriptionEn : t(`teaGroups.${activeGroupData.id}Desc`, activeGroupData.description)}
                                 </p>
                                 {activeGroupData.id === 'set-qua-tang' && (
                                     <div className="mt-3 flex flex-wrap gap-2">
@@ -727,7 +731,7 @@ const PageContent = () => {
                                                     key={gift.slug}
                                                     href={gift.apiId ? `/san-pham-tra/${gift.apiId}` : `/san-pham-tra/${gift.slug}`}
                                                     imageSrc={getImageUrl(gift.image)}
-                                                    name={gift.name}
+                                                    name={locale === 'en' && gift.nameEn?.trim() ? gift.nameEn : gift.name}
                                                     price={priceLabel(gift.priceMin, gift.priceMax)}
                                                     layout="inline"
                                                     weight={
@@ -749,7 +753,7 @@ const PageContent = () => {
                                                 key={line.key}
                                                 href={`/san-pham-tra/${firstVariant?.id ?? ''}`}
                                                 imageSrc={getImageUrl(line.image)}
-                                                name={line.name}
+                                                name={locale === 'en' && (line.nameEn?.trim() || firstVariant?.nameEn?.trim()) ? (line.nameEn?.trim() || firstVariant?.nameEn?.trim())! : line.name}
                                                 price={priceLabel(line.minPrice, line.maxPrice)}
                                                 layout="inline"
                                                 weight={

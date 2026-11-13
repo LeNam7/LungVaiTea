@@ -1163,6 +1163,8 @@ export default function QuanLyDonHangPage() {
                 const method = getPaymentMethod(row);
                 if (method === 'cod') return <Tag color="blue">COD</Tag>;
                 if (method === 'qr') return <Tag color="cyan">Chuyển khoản</Tag>;
+                if (method === 'stripe') return <Tag color="purple">Stripe (Thẻ QT)</Tag>;
+                if (method === 'paypal') return <Tag color="gold">PayPal</Tag>;
                 return <span className="text-gray-400">-</span>;
             },
         },
@@ -1328,9 +1330,19 @@ export default function QuanLyDonHangPage() {
                                         <div className="px-4 py-3 leading-7 text-[#262626] md:col-span-3">
                                             {deliveryInfo ? (
                                                 <div>
+                                                    {deliveryInfo.countryName && (
+                                                        <p>
+                                                            <b>Khu vực:</b>{' '}
+                                                            <Tag color={deliveryInfo.shippingRegion === 'international' ? 'purple' : 'green'}>
+                                                                {deliveryInfo.countryName} {deliveryInfo.shippingRegion === 'international' ? '(Quốc tế)' : '(Nội địa)'}
+                                                            </Tag>
+                                                        </p>
+                                                    )}
                                                     {deliveryInfo.fullName && <p><b>Họ tên:</b> {deliveryInfo.fullName}</p>}
                                                     {deliveryInfo.phoneNumber && <p><b>SĐT:</b> {deliveryInfo.phoneNumber}</p>}
                                                     {deliveryInfo.email && <p><b>Email:</b> {deliveryInfo.email}</p>}
+                                                    {deliveryInfo.stateCity && <p><b>Bang / Tỉnh / Thành phố:</b> {deliveryInfo.stateCity}</p>}
+                                                    {deliveryInfo.postalCode && <p><b>Mã bưu chính (ZIP):</b> {deliveryInfo.postalCode}</p>}
                                                     {(deliveryInfo.provinceName || deliveryInfo.province) && (
                                                         <p><b>Tỉnh/TP:</b> {deliveryInfo.provinceName ?? deliveryInfo.province}</p>
                                                     )}
@@ -1383,7 +1395,11 @@ export default function QuanLyDonHangPage() {
                                             ? 'Thanh toán khi nhận hàng'
                                             : getPaymentMethod(selectedOrder) === 'qr'
                                               ? 'Quét mã QR để chuyển tiền'
-                                              : '-');
+                                              : getPaymentMethod(selectedOrder) === 'stripe'
+                                                ? 'Thanh toán thẻ quốc tế (Stripe)'
+                                                : getPaymentMethod(selectedOrder) === 'paypal'
+                                                  ? 'Thanh toán qua PayPal'
+                                                  : '-');
                                     return (
                                         <div className="rounded-[8px] border border-[#edf0e8] bg-white p-4 text-[13px]">
                                             <div className="flex flex-wrap items-center justify-between gap-2">

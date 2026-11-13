@@ -14,6 +14,7 @@ namespace Seeme.Service.OrderService
         Task<Response<bool>> UpdateOrderProductStatusAsync(int orderProductId, Enumerations.OrderProductStatus status);
         Task<Response<bool>> UpdateOrderTeaStatusAsync(int orderTeaId, Enumerations.OrderTeaStatus status);
         Task<Response<bool>> CancelOrderAsync(int orderId, string reasonCancellation);
+        Task<Response<bool>> UpdateOrderPaymentAsync(int orderId, int totalPayment);
 
         // Get Order Details
         Task<Response<OrderDetailResponseModel>> GetOrderDetailAsync(int orderId);

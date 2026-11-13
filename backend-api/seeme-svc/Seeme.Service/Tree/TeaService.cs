@@ -87,8 +87,11 @@ namespace Seeme.Service.Tree
                 }
 
                 existingGarden.Name = garden.Name;
+                existingGarden.NameEn = garden.NameEn;
                 existingGarden.Address = garden.Address;
+                existingGarden.AddressEn = garden.AddressEn;
                 existingGarden.Description = garden.Description;
+                existingGarden.DescriptionEn = garden.DescriptionEn;
                 existingGarden.IsActive = garden.IsActive;
 
                 var result = await _gardenRepository.UpdateAsync(existingGarden);
@@ -360,7 +363,9 @@ namespace Seeme.Service.Tree
                 }
 
                 existingGroup.Name = group.Name;
+                existingGroup.NameEn = group.NameEn;
                 existingGroup.Description = group.Description;
+                existingGroup.DescriptionEn = group.DescriptionEn;
                 existingGroup.ImageUrl = group.ImageUrl;
                 existingGroup.SortOrder = group.SortOrder;
                 existingGroup.IsActive = group.IsActive;
@@ -517,11 +522,13 @@ namespace Seeme.Service.Tree
                 }
 
                 existingTea.Name = tea.Name;
+                existingTea.NameEn = tea.NameEn;
                 existingTea.CategoryIds = tea.CategoryIds;
                 existingTea.Price = tea.Price;
                 existingTea.GardenId = tea.GardenId;
                 existingTea.YearOld = tea.YearOld;
                 existingTea.Description = tea.Description;
+                existingTea.DescriptionEn = tea.DescriptionEn;
                 existingTea.Long = tea.Long;
                 existingTea.Lat = tea.Lat;
                 existingTea.Aspect = tea.Aspect;
@@ -534,6 +541,7 @@ namespace Seeme.Service.Tree
                 existingTea.Images = tea.Images;
                 existingTea.Volume = tea.Volume;
                 existingTea.Type = tea.Type;
+                existingTea.TypeEn = tea.TypeEn;
 
                 var result = await _teaRepository.UpdateAsync(existingTea);
                 return new Response<Tea>(result);

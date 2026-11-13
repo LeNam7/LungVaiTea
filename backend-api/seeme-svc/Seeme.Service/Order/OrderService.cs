@@ -6,6 +6,7 @@ using Seeme.Domain.Models.Order;
 using Seeme.Domain.Models.ReponseModel;
 using System.Linq.Expressions;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Seeme.Service.OrderService
 {
@@ -16,13 +17,17 @@ namespace Seeme.Service.OrderService
         private readonly IOrderTeaRepository _orderTeaRepository;
         private readonly IUserAddressRepository _customerAddressRepository;
         private readonly IUserRepository _customerRepository;
+        private readonly ITeaRepository _teaRepository;
+        private readonly IProductRepository _productRepository;
 
         public OrderService(
             IOrderRepository orderRepository,
             IOrderProductRepository orderProductRepository,
             IOrderTeaRepository orderTeaRepository,
             IUserAddressRepository customerAddressRepository,
-            IUserRepository customerRepository
+            IUserRepository customerRepository,
+            ITeaRepository teaRepository,
+            IProductRepository productRepository
         )
         {
             _orderRepository = orderRepository;
@@ -30,6 +35,8 @@ namespace Seeme.Service.OrderService
             _orderTeaRepository = orderTeaRepository;
             _customerAddressRepository = customerAddressRepository;
             _customerRepository = customerRepository;
+            _teaRepository = teaRepository;
+            _productRepository = productRepository;
         }
 
         #region Create Order
@@ -83,6 +90,66 @@ namespace Seeme.Service.OrderService
                     return new Response<OrderCreateResponseModel>(400, "Tổng giá trị đơn hàng phải lớn hơn 0");
                 }
 
+                // Phương thức thanh toán nằm trong DeliveryInformation (FE gửi kèm lúc đặt hàng).
+                // COD thì chưa thu đồng nào, kể cả đơn cây trà; QR + cây trà thì trả trước 100%.
+                var paymentMethod = string.Empty;
+                try
+                {
+                    using var deliveryDoc = JsonDocument.Parse(request.DeliveryInformation);
+                    if (deliveryDoc.RootElement.TryGetProperty("paymentMethod", out var methodElement))
+                    {
+                        paymentMethod = methodElement.GetString()?.ToLowerInvariant() ?? string.Empty;
+                    }
+                }
+                catch
+                {
+                    // DeliveryInformation không phải JSON hợp lệ: giữ nguyên hành vi cũ phía dưới.
+                }
+                var isCod = paymentMethod == "cod";
+
+                // Cây trà đã bán thì không được bán lại: chặn ngay trước khi tạo đơn.
+                var orderedTeaIds = request.OrderDetails
+                    .OfType<JsonElement>()
+                    .Where(e => e.TryGetProperty("Type", out var t) &&
+                                t.GetString()?.ToLower() == "tea" &&
+                                e.TryGetProperty("TeaId", out var idElement) &&
+                                idElement.TryGetInt32(out _))
+                    .Select(e => e.GetProperty("TeaId").GetInt32())
+                    .Distinct()
+                    .ToList();
+                foreach (var teaId in orderedTeaIds)
+                {
+                    var existingTea = await _teaRepository.GetByIdAsync(teaId);
+                    if (existingTea != null && existingTea.Sold)
+                    {
+                        return new Response<OrderCreateResponseModel>(400, $"Cây trà {existingTea.Name} đã được bán, không thể đặt mua lại");
+                    }
+                }
+
+                // Bằng chứng chuyển khoản Sepay thật: FE chỉ gửi kèm khi socket Sepay
+                // đã xác nhận giao dịch vào (transferType = "in", số tiền đủ tổng đơn).
+                // Khách bấm "Đã chuyển khoản" nhưng chưa chuyển (FE gửi null) thì đơn cây
+                // QR KHÔNG được ghi nhận đã trả tiền - để "Chờ thanh toán" cho admin
+                // đối soát tay, thay vì tự thành "Đã thanh toán" như trước.
+                var hasSepayConfirmation = false;
+                if (request.SepayTransaction.HasValue &&
+                    request.SepayTransaction.Value.ValueKind == JsonValueKind.Object)
+                {
+                    var tx = request.SepayTransaction.Value;
+                    var amountOk = (tx.TryGetProperty("transferAmount", out var amountElement) ||
+                                    tx.TryGetProperty("TransferAmount", out amountElement)) &&
+                                   amountElement.TryGetInt32(out var transferAmount) &&
+                                   transferAmount >= totalPrice;
+                    var typeOk = (tx.TryGetProperty("transferType", out var typeElement) ||
+                                  tx.TryGetProperty("TransferType", out typeElement)) &&
+                                 string.Equals(typeElement.GetString(), "in", StringComparison.OrdinalIgnoreCase);
+                    hasSepayConfirmation = amountOk && typeOk;
+                }
+
+                // Đơn thanh toán quốc tế qua cổng Stripe hoặc PayPal (đã thanh toán thành công trước khi gọi API tạo đơn)
+                var isInternationalPaid = paymentMethod == "stripe" || paymentMethod == "paypal";
+                var isPaid = isInternationalPaid || hasSepayConfirmation;
+
                 // Create order
                 var order = new Order
                 {
@@ -90,8 +157,8 @@ namespace Seeme.Service.OrderService
                     TotalPrice = totalPrice,
                     Type = orderType,
                     DeliveryInformation = request.DeliveryInformation,
-                    PrePayment = hasTeaItems, // Cây trà phải thanh toán trước
-                    TotalPayment = hasTeaItems ? totalPrice : 0, // Nếu có cây trà, khách hàng phải thanh toán 100%
+                    PrePayment = (hasTeaItems && !isCod) || isInternationalPaid || hasSepayConfirmation,
+                    TotalPayment = isCod ? 0 : (isPaid ? totalPrice : 0),
                     CreatedDate = DateTime.Now,
                     IsDelete = false
                 };
@@ -124,6 +191,17 @@ namespace Seeme.Service.OrderService
                         IsDelete = false
                     };
                     await _orderTeaRepository.CreateAsync(orderTea);
+
+                    // Cây đã có đơn thì coi là đã bán + ẩn khỏi trang bán để không bán trùng.
+                    foreach (var teaId in orderedTeaIds)
+                    {
+                        var tea = await _teaRepository.GetByIdAsync(teaId);
+                        if (tea == null) continue;
+                        tea.Sold = true;
+                        tea.IsActive = false;
+                        tea.UpdatedDate = DateTime.Now;
+                        await _teaRepository.UpdateAsync(tea);
+                    }
                 }
 
                 return new Response<OrderCreateResponseModel>(
@@ -235,6 +313,37 @@ namespace Seeme.Service.OrderService
                     await _orderTeaRepository.UpdateAsync(ot);
                 }
 
+                // Đơn hủy thì cây trở lại trạng thái chưa bán + hiện lại để bán tiếp.
+                foreach (var ot in orderTeas)
+                {
+                    if (string.IsNullOrWhiteSpace(ot.OrderDetails)) continue;
+                    try
+                    {
+                        using var detailsDoc = JsonDocument.Parse(ot.OrderDetails);
+                        if (detailsDoc.RootElement.ValueKind != JsonValueKind.Array) continue;
+                        foreach (var element in detailsDoc.RootElement.EnumerateArray())
+                        {
+                            if (!element.TryGetProperty("Type", out var typeElement) ||
+                                typeElement.GetString()?.ToLower() != "tea" ||
+                                !element.TryGetProperty("TeaId", out var teaIdElement) ||
+                                !teaIdElement.TryGetInt32(out var teaId))
+                            {
+                                continue;
+                            }
+                            var tea = await _teaRepository.GetByIdAsync(teaId);
+                            if (tea == null) continue;
+                            tea.Sold = false;
+                            tea.IsActive = true;
+                            tea.UpdatedDate = DateTime.Now;
+                            await _teaRepository.UpdateAsync(tea);
+                        }
+                    }
+                    catch
+                    {
+                        // Chi tiết đơn hỏng: bỏ qua cây đó, đơn vẫn hủy bình thường.
+                    }
+                }
+
                 await _orderRepository.UpdateAsync(order);
 
                 return new Response<bool>(true);
@@ -242,6 +351,38 @@ namespace Seeme.Service.OrderService
             catch (Exception ex)
             {
                 return new Response<bool>(500, $"Lỗi khi hủy đơn hàng: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật số tiền đã thanh toán của đơn hàng (admin đối soát tay:
+        /// đơn QR chờ thanh toán hoặc đơn COD đã thu tiền mặt).
+        /// </summary>
+        public async Task<Response<bool>> UpdateOrderPaymentAsync(int orderId, int totalPayment)
+        {
+            try
+            {
+                var order = await _orderRepository.GetByIdAsync(orderId);
+                if (order == null)
+                {
+                    return new Response<bool>(404, "Đơn hàng không tồn tại");
+                }
+
+                if (totalPayment < 0 || totalPayment > order.TotalPrice)
+                {
+                    return new Response<bool>(400, "Số tiền thanh toán phải từ 0 đến tổng giá trị đơn hàng");
+                }
+
+                order.TotalPayment = totalPayment;
+                order.UpdatedDate = DateTime.Now;
+
+                await _orderRepository.UpdateAsync(order);
+
+                return new Response<bool>(true);
+            }
+            catch (Exception ex)
+            {
+                return new Response<bool>(500, $"Lỗi khi cập nhật thanh toán: {ex.Message}");
             }
         }
 
@@ -343,7 +484,9 @@ namespace Seeme.Service.OrderService
                         TotalPrice = order.TotalPrice,
                         PrePayment = order.PrePayment,
                         TotalPayment = order.TotalPayment,
-                        CreatedDate = order.CreatedDate ?? DateTime.Now
+                        ReasonCancellation = order.ReasonCancellation ?? string.Empty,
+                        CreatedDate = order.CreatedDate ?? DateTime.Now,
+                        PaymentMethod = ExtractPaymentMethod(order.DeliveryInformation)
                     });
                 }
 
@@ -482,6 +625,92 @@ namespace Seeme.Service.OrderService
         /// <summary>
         /// Lấy danh sách lịch sử đặt hàng cây trà của khách hàng
         /// </summary>
+        /// <summary>
+        /// Gắn ảnh sản phẩm/cây vào từng chi tiết trong OrderDetails của lịch sử đơn.
+        /// Trước đây OrderDetails chỉ có thông tin lúc đặt hàng, không có ảnh nên FE
+        /// lịch sử rơi về 1 ảnh mặc định cây trà cho mọi dòng. Chỉ enrich chuỗi JSON
+        /// trả về, không sửa dữ liệu gốc; chi tiết nào không tra được ảnh (sản phẩm
+        /// hoặc cây đã xóa) thì giữ nguyên để FE tự fallback.
+        /// </summary>
+        private static List<int> CollectDetailIds(string? orderDetailsJson, string idProperty)
+        {
+            var ids = new List<int>();
+            if (string.IsNullOrWhiteSpace(orderDetailsJson)) return ids;
+            JsonNode? root;
+            try
+            {
+                root = JsonNode.Parse(orderDetailsJson);
+            }
+            catch
+            {
+                return ids;
+            }
+            if (root is not JsonArray details) return ids;
+            foreach (var node in details)
+            {
+                if (node is JsonObject detail && TryGetDetailId(detail, idProperty) is int id)
+                    ids.Add(id);
+            }
+            return ids;
+        }
+
+        private static string EnrichDetailsImages(string? orderDetailsJson, string idProperty, string imageProperty, IReadOnlyDictionary<int, string> imagesById)
+        {
+            if (string.IsNullOrWhiteSpace(orderDetailsJson)) return orderDetailsJson ?? string.Empty;
+            JsonNode? root;
+            try
+            {
+                root = JsonNode.Parse(orderDetailsJson);
+            }
+            catch
+            {
+                return orderDetailsJson;
+            }
+            if (root is not JsonArray details) return orderDetailsJson;
+            foreach (var node in details)
+            {
+                if (node is not JsonObject detail) continue;
+                if (TryGetDetailId(detail, idProperty) is not int id) continue;
+                if (imagesById.TryGetValue(id, out var images) && !string.IsNullOrWhiteSpace(images))
+                    detail[imageProperty] = images;
+            }
+            return root.ToJsonString();
+        }
+
+        private static int? TryGetDetailId(JsonObject detail, string pascalName)
+        {
+            var camelName = char.ToLowerInvariant(pascalName[0]) + pascalName[1..];
+            foreach (var name in new[] { pascalName, camelName })
+            {
+                if (detail.TryGetPropertyValue(name, out var node) && node != null &&
+                    int.TryParse(node.ToJsonString(), out var id))
+                    return id;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Rút phương thức thanh toán ("cod"/"qr") từ DeliveryInformation mà FE gửi
+        /// kèm lúc đặt hàng. JSON lỗi hoặc không có key thì trả chuỗi rỗng.
+        /// </summary>
+        private static string ExtractPaymentMethod(string? deliveryInformation)
+        {
+            if (string.IsNullOrWhiteSpace(deliveryInformation)) return string.Empty;
+            try
+            {
+                using var deliveryDoc = JsonDocument.Parse(deliveryInformation);
+                if (deliveryDoc.RootElement.TryGetProperty("paymentMethod", out var methodElement))
+                {
+                    return methodElement.GetString()?.ToLowerInvariant() ?? string.Empty;
+                }
+            }
+            catch
+            {
+                // DeliveryInformation không phải JSON hợp lệ.
+            }
+            return string.Empty;
+        }
+
         public async Task<Response<List<OrderTeaHistoryResponseModel>>> GetOrderTeaHistoriesAsync(int userId)
         {
             try
@@ -503,6 +732,12 @@ namespace Seeme.Service.OrderService
                 var orderIds = userOrders.Select(o => o.Id).ToList();
                 var orderTeas = _orderTeaRepository.GetListAsync(ot => orderIds.Contains(ot.OrderId) && !ot.IsDelete).ToList();
 
+                // Gắn ảnh cây vào từng chi tiết để FE lịch sử hiện đúng ảnh cây đã mua.
+                var teaIds = orderTeas.SelectMany(ot => CollectDetailIds(ot.OrderDetails, "TeaId")).Distinct().ToList();
+                var teasById = teaIds.Count > 0
+                    ? _teaRepository.GetListAsync(t => teaIds.Contains(t.Id)).ToDictionary(t => t.Id, t => t.Images ?? string.Empty)
+                    : new Dictionary<int, string>();
+
                 var result = new List<OrderTeaHistoryResponseModel>();
 
                 foreach (var orderTea in orderTeas)
@@ -515,11 +750,12 @@ namespace Seeme.Service.OrderService
                             OrderTeaId = orderTea.Id,
                             OrderId = orderTea.OrderId,
                             Status = orderTea.Status,
+                            ReasonCancellation = order.ReasonCancellation ?? string.Empty,
                             TotalPrice = order.TotalPrice,
                             PrePayment = order.PrePayment,
                             TotalPayment = order.TotalPayment,
                             DeliveryInformation = order.DeliveryInformation,
-                            OrderDetails = orderTea.OrderDetails,
+                            OrderDetails = EnrichDetailsImages(orderTea.OrderDetails, "TeaId", "TeaImages", teasById),
                             CreatedDate = orderTea.CreatedDate ?? DateTime.Now,
                             UpdatedDate = orderTea.UpdatedDate
                         });
@@ -558,6 +794,12 @@ namespace Seeme.Service.OrderService
                 var orderIds = userOrders.Select(o => o.Id).ToList();
                 var orderProducts = _orderProductRepository.GetListAsync(op => orderIds.Contains(op.OrderId) && !op.IsDelete).ToList();
 
+                // Gắn ảnh sản phẩm vào từng chi tiết để FE lịch sử hiện đúng ảnh sản phẩm đã mua.
+                var productIds = orderProducts.SelectMany(op => CollectDetailIds(op.OrderDetails, "ProductId")).Distinct().ToList();
+                var productsById = productIds.Count > 0
+                    ? _productRepository.GetListAsync(p => productIds.Contains(p.Id)).ToDictionary(p => p.Id, p => p.Images ?? string.Empty)
+                    : new Dictionary<int, string>();
+
                 var result = new List<OrderProductHistoryResponseModel>();
 
                 foreach (var orderProduct in orderProducts)
@@ -570,10 +812,12 @@ namespace Seeme.Service.OrderService
                             OrderProductId = orderProduct.Id,
                             OrderId = orderProduct.OrderId,
                             TotalPrice = order.TotalPrice,
+                            TotalPayment = order.TotalPayment,
                             OrderType = order.Type.ToString(),
                             DeliveryInformation = order.DeliveryInformation,
                             Status = orderProduct.Status,
-                            OrderDetails = orderProduct.OrderDetails,
+                            ReasonCancellation = order.ReasonCancellation ?? string.Empty,
+                            OrderDetails = EnrichDetailsImages(orderProduct.OrderDetails, "ProductId", "ProductImages", productsById),
                             CreatedDate = orderProduct.CreatedDate ?? DateTime.Now,
                             UpdatedDate = orderProduct.UpdatedDate
                         });

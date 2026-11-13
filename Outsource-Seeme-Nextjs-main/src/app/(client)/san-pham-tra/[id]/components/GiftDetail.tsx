@@ -12,9 +12,12 @@ import {GIFT_COLLECTIONS, giftsFromApiProducts, type GiftPackaging, type GiftPro
 import {getProductsPagingAPI} from '@/api/ProductAPI';
 import {unwrapPagingData} from '@/api/response';
 import type {Product} from '@/types/swagger.types';
+import {useLanguage} from '@/context/LanguageContext';
 
 /** Trang chi tiết set quà tặng. Nguồn duy nhất là API (prop gift); link slug cũ (gift-...) đối chiếu sang set quà thật trên API theo tên. */
 export default function GiftDetail({slug, gift: apiGift, relatedGifts, initialPackagingId}: {slug: string; gift?: GiftProduct; relatedGifts?: GiftProduct[]; initialPackagingId?: number}) {
+    const {t, locale} = useLanguage();
+    const isEn = locale === 'en';
     const [apiGiftBySlug, setApiGiftBySlug] = useState<GiftProduct | null>(null);
     const [apiRelated, setApiRelated] = useState<GiftProduct[] | null>(null);
     // Danh sách ảnh gallery LUÔN đủ ngay từ đầu: ảnh quy cách + TẤT CẢ ảnh màu
@@ -83,19 +86,25 @@ export default function GiftDetail({slug, gift: apiGift, relatedGifts, initialPa
               ? initialPkgImages
               : defaultOrFallback;
     const galleryIndex = Math.min(Math.max(galleryActiveIndex, 0), images.length - 1);
+    const giftName = isEn && gift.nameEn?.trim() ? gift.nameEn.trim() : gift.name;
     const accordionItems = [
-        {title: 'Thông tin sản phẩm', content: gift.description || 'Đang cập nhật.'},
+        {title: isEn ? 'Product Details' : 'Thông tin sản phẩm', content: (isEn && gift.descriptionEn?.trim()) ? gift.descriptionEn.trim() : (gift.description || (isEn ? 'Updating...' : 'Đang cập nhật.'))},
         {
-            title: 'Quy cách & Khối lượng',
-            content:
-                gift.packagings.length > 1
+            title: isEn ? 'Specifications & Packaging' : 'Quy cách & Khối lượng',
+            content: isEn
+                ? gift.packagings.length > 1
+                    ? `Packaging options for this gift set:\n${gift.packagings
+                          .map((p) => `- ${p.packagingEn?.trim() || p.packaging}: ${p.price.toLocaleString('en-US')} VND`)
+                          .join('\n')}`
+                    : `Packaging: ${gift.packagingEn?.trim() || gift.packaging}\nNet weight: ${gift.gram}g / set`
+                : gift.packagings.length > 1
                     ? `Các quy cách đóng gói của set này:\n${gift.packagings
                           .map((p) => `- ${p.packaging}: ${p.price.toLocaleString('vi-VN')} VND`)
                           .join('\n')}`
                     : `Quy cách đóng gói: ${gift.packaging}\nKhối lượng tịnh: ${gift.gram}g / set`,
         },
-        {title: 'Hướng dẫn sử dụng', content: gift.userManual || 'Đang cập nhật.'},
-        {title: 'Hướng dẫn bảo quản', content: gift.storageInstructions || 'Đang cập nhật.'},
+        {title: isEn ? 'Usage Instructions' : 'Hướng dẫn sử dụng', content: (isEn && gift.userManualEn?.trim()) ? gift.userManualEn.trim() : (gift.userManual || (isEn ? 'Updating...' : 'Đang cập nhật.'))},
+        {title: isEn ? 'Storage Instructions' : 'Hướng dẫn bảo quản', content: (isEn && gift.storageInstructionsEn?.trim()) ? gift.storageInstructionsEn.trim() : (gift.storageInstructions || (isEn ? 'Updating...' : 'Đang cập nhật.'))},
     ];
 
     const related: GiftProduct[] = relatedGifts ?? apiRelated ?? [];
@@ -111,25 +120,25 @@ export default function GiftDetail({slug, gift: apiGift, relatedGifts, initialPa
 
             {/* Breadcrumb phân cấp mới: Danh mục trà / Set quà tặng / Bộ sưu tập / Sản phẩm */}
             <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-[50px] -mt-6 pb-2 text-xs sm:text-sm flex items-center gap-1.5 flex-wrap">
-                <Link href="/" className="hover:text-[#7F9635] opacity-70 transition-colors">
+                <Link href={isEn ? '/en' : '/'} className="hover:text-[#7F9635] opacity-70 transition-colors">
                     Home
                 </Link>
                 <span className="opacity-70">/</span>
-                <Link href="/san-pham-tra" className="hover:text-[#7F9635] opacity-70 transition-colors">
-                    Danh mục trà
+                <Link href={isEn ? '/en/san-pham-tra' : '/san-pham-tra'} className="hover:text-[#7F9635] opacity-70 transition-colors">
+                    {isEn ? 'Tea Catalog' : 'Danh mục trà'}
                 </Link>
                 <span className="opacity-70">/</span>
                 <Link
-                    href="/san-pham-tra?group=set-qua-tang"
+                    href={isEn ? '/en/san-pham-tra?group=set-qua-tang' : '/san-pham-tra?group=set-qua-tang'}
                     className="hover:text-[#7F9635] opacity-70 transition-colors"
                 >
-                    Set quà tặng
+                    {isEn ? 'Gift Sets' : 'Set quà tặng'}
                 </Link>
                 {collection ? (
                     <>
                         <span className="opacity-70">/</span>
                         <Link
-                            href={`/san-pham-tra?group=set-qua-tang&collection=${collection.id}`}
+                            href={isEn ? `/en/san-pham-tra?group=set-qua-tang&collection=${collection.id}` : `/san-pham-tra?group=set-qua-tang&collection=${collection.id}`}
                             className="hover:text-[#7F9635] opacity-70 transition-colors"
                         >
                             {collection.name}
@@ -137,19 +146,19 @@ export default function GiftDetail({slug, gift: apiGift, relatedGifts, initialPa
                     </>
                 ) : null}
                 <span className="opacity-70">/</span>
-                <span className="font-semibold text-[#3B5518] truncate max-w-[200px]">{gift.name}</span>
+                <span className="font-semibold text-[#3B5518] truncate max-w-[200px]">{giftName}</span>
             </div>
 
             <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-[50px] py-6 lg:py-10">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
                     <ImageGallery
                         images={images}
-                        name={gift.name}
+                        name={giftName}
                         activeIndex={galleryIndex}
                         onActiveIndexChange={setGalleryActiveIndex}
                     />
                     <GiftProductInfo
-                        gift={gift}
+                        gift={{...gift, name: giftName}}
                         index={0}
                         accordionItems={accordionItems}
                         initialPackagingId={initialPackagingId}

@@ -66,18 +66,25 @@ namespace Seeme.Service.ProductService
                 }
 
                 existingProduct.Name = product.Name;
+                existingProduct.NameEn = product.NameEn;
                 existingProduct.GroupId = product.GroupId;
                 existingProduct.Price = product.Price;
                 existingProduct.Total = product.Total;
                 existingProduct.Description = product.Description;
+                existingProduct.DescriptionEn = product.DescriptionEn;
                 existingProduct.UserManual = product.UserManual;
+                existingProduct.UserManualEn = product.UserManualEn;
                 existingProduct.StorageInstructions = product.StorageInstructions;
+                existingProduct.StorageInstructionsEn = product.StorageInstructionsEn;
                 existingProduct.Images = product.Images;
                 existingProduct.Quantity = product.Quantity;
                 existingProduct.PackagingName = product.PackagingName;
+                existingProduct.PackagingNameEn = product.PackagingNameEn;
                 existingProduct.VariantName = product.VariantName;
+                existingProduct.VariantNameEn = product.VariantNameEn;
                 existingProduct.IsGiftSet = product.IsGiftSet;
                 existingProduct.CollectionName = product.CollectionName;
+                existingProduct.CollectionNameEn = product.CollectionNameEn;
                 existingProduct.ColorOptions = product.ColorOptions;
                 existingProduct.IsActive = product.IsActive;
 

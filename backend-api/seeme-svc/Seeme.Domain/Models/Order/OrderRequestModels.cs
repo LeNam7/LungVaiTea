@@ -23,6 +23,15 @@ namespace Seeme.Domain.Models.Order
         /// Danh sách chi tiết sản phẩm và cây trà trong đơn hàng
         /// </summary>
         public List<object> OrderDetails { get; set; } = new List<object>();
+
+        /// <summary>
+        /// Bằng chứng chuyển khoản Sepay (FE chỉ gửi khi socket Sepay đã xác nhận
+        /// giao dịch vào: {id, content, transferAmount, transferType, ...}).
+        /// Không có bằng chứng thì coi như chưa nhận tiền, kể cả khi khách đã bấm
+        /// "Đã chuyển khoản" - đơn cây QR sẽ ở trạng thái "Chờ thanh toán" để
+        /// admin đối soát tay thay vì bị ghi nhận "Đã thanh toán" oan.
+        /// </summary>
+        public System.Text.Json.JsonElement? SepayTransaction { get; set; }
     }
 
     /// <summary>

@@ -196,10 +196,16 @@ const SectionGiaTriCotLoi = () => {
                             href="https://tea.anf-technology.com/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2.5 rounded-full bg-[#3B5518] px-6 py-3 text-sm font-semibold text-[#DED1B9] shadow-md transition hover:bg-[#4A6720] hover:text-white"
+                            className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#2F4413] via-[#3B5518] to-[#4A6720] px-6 py-3 text-sm font-semibold text-[#FDFBF7] border border-[#C5A869]/50 shadow-[0_8px_24px_rgba(47,68,19,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)] transition-all duration-300 hover:border-[#E5C77D] hover:shadow-[0_12px_30px_rgba(59,85,24,0.45),0_0_20px_rgba(197,168,105,0.35)] hover:scale-[1.03] whitespace-nowrap cursor-pointer"
                         >
-                            <span>{t('home.bookTeaRoomBtn', 'Đặt phòng trà trực tuyến')}</span>
-                            <span aria-hidden="true" className="text-xs">↗</span>
+                            <span className="tracking-wide">{t('home.bookTeaRoomBtn', 'Đặt phòng trà trực tuyến')}</span>
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C5A869]/25 border border-[#C5A869]/40 text-[#FDFBF7] transition-all duration-300 group-hover:scale-110 group-hover:bg-[#C5A869]/40">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                    <polyline points="15 3 21 3 21 9" />
+                                    <line x1="10" y1="14" x2="21" y2="3" />
+                                </svg>
+                            </span>
                         </a>
                     </FadeInUp>
                 </div>
@@ -243,17 +249,17 @@ const SectionGiaTriCotLoi = () => {
                             {/* CTA: Đặt phòng trà trực tuyến (Bottom Left - Red Box Location) */}
                             <FadeInUp
                                 delay={0.25}
-                                className="absolute top-[85%] left-0 w-[28%] -translate-y-1/2"
+                                className="absolute top-[85%] left-0 w-auto -translate-y-1/2"
                             >
                                 <a
                                     href="https://tea.anf-technology.com/"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group inline-flex items-center gap-3 rounded-full bg-[#3B5518] px-6 py-3.5 text-base font-semibold text-[#DED1B9] shadow-[0_8px_20px_rgba(59,85,24,0.25)] transition-all duration-300 hover:bg-[#4A6720] hover:text-white hover:shadow-[0_12px_28px_rgba(59,85,24,0.35)] hover:scale-[1.02] cursor-pointer"
+                                    className="group inline-flex items-center gap-3.5 rounded-full bg-gradient-to-r from-[#2B3E12] via-[#3B5518] to-[#4A6720] px-7 py-3.5 text-sm xl:text-base font-semibold text-[#FDFBF7] border border-[#C5A869]/60 shadow-[0_10px_28px_rgba(47,68,19,0.35),0_0_15px_rgba(197,168,105,0.2),inset_0_1px_1px_rgba(255,255,255,0.25)] transition-all duration-300 hover:border-[#E5C77D] hover:shadow-[0_14px_36px_rgba(47,68,19,0.5),0_0_24px_rgba(229,199,125,0.4)] hover:scale-[1.03] whitespace-nowrap cursor-pointer"
                                 >
-                                    <span>{t('home.bookTeaRoomBtn', 'Đặt phòng trà trực tuyến')}</span>
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#DED1B9]/20 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:bg-white/30">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <span className="tracking-wide drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">{t('home.bookTeaRoomBtn', 'Đặt phòng trà trực tuyến')}</span>
+                                    <span className="flex h-7 w-7 xl:h-8 xl:w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37]/30 to-[#C5A869]/20 border border-[#C5A869]/60 text-[#FDFBF7] shadow-inner transition-all duration-300 group-hover:scale-110 group-hover:border-[#E5C77D] group-hover:bg-[#D4AF37]/45 group-hover:shadow-[0_0_12px_rgba(229,199,125,0.5)]">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                                             <polyline points="15 3 21 3 21 9" />
                                             <line x1="10" y1="14" x2="21" y2="3" />

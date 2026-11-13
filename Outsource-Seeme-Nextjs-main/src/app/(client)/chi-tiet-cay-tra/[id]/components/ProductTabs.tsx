@@ -76,7 +76,7 @@ export default function ProductTabs({description, infoTable, harvestPhases, faqD
                         </div>
 
                         <h3 className="font-source-serif-4 text-3xl lg:text-4xl text-[#3B5518] text-center italic">
-                            Thông tin cây trà
+                            {t('treeDetail.infoTab', 'Thông tin cây trà')}
                         </h3>
                         <p className="text-sm lg:text-base text-center max-w-3xl mx-auto mt-4 leading-relaxed opacity-80">
                             {description}
@@ -113,9 +113,11 @@ export default function ProductTabs({description, infoTable, harvestPhases, faqD
                         </div>
 
                         <h3 className="font-source-serif-4 text-3xl lg:text-4xl text-[#3B5518] text-center italic">
-                            Thời gian thu hoạch
+                            {t('treeDetail.harvestTab', 'Thời gian thu hoạch')}
                         </h3>
-                        <p className="text-sm text-center mt-3 opacity-70">Tần suất thu hoạch 1 lần/năm - Vụ Xuân</p>
+                        <p className="text-sm text-center mt-3 opacity-70">
+                            {t('treeDetail.harvestFrequencyDesc', 'Tần suất thu hoạch 1 lần/năm - Vụ Xuân')}
+                        </p>
 
                         {/* Timeline */}
                         <div className="max-w-3xl mx-auto mt-16 px-6 sm:px-12">
@@ -170,7 +172,7 @@ export default function ProductTabs({description, infoTable, harvestPhases, faqD
                         </div>
 
                         <h3 className="font-source-serif-4 text-3xl lg:text-4xl text-[#3B5518] text-center italic mb-8">
-                            Những câu hỏi thường gặp
+                            {t('treeDetail.faqTab', 'Những câu hỏi thường gặp')}
                         </h3>
 
                         <div className="max-w-3xl mx-auto space-y-3">

@@ -113,10 +113,13 @@ export interface Garden {
   updatedDate?: string | null;
   isDelete?: boolean;
   name?: string | null;
+  nameEn?: string | null;
   address?: string | null;
+  addressEn?: string | null;
   isActive?: boolean;
   /** Mô tả vườn từ API (đã bổ sung ở BE 25/10/2026), FE ưu tiên hiển thị trường này. */
   description?: string | null;
+  descriptionEn?: string | null;
 }
 
 // ---- Category ----
@@ -142,8 +145,10 @@ export interface TeaGroupRecord {
   /** Slug - khóa nghiệp vụ, khớp giá trị CategoryTea.group (vd 'luc-tra'). */
   slug?: string | null;
   name?: string | null;
+  nameEn?: string | null;
   /** Mô tả nhóm, hiện ở mega menu. */
   description?: string | null;
+  descriptionEn?: string | null;
   /** Ảnh đại diện nhóm (để dùng sau). */
   imageUrl?: string | null;
   sortOrder?: number;
@@ -167,11 +172,13 @@ export interface Tea {
   updatedDate?: string | null;
   isDelete?: boolean;
   name?: string | null;
+  nameEn?: string | null;
   categoryIds?: string | null;
   price?: number;
   gardenId?: number;
   yearOld?: number;
   description?: string | null;
+  descriptionEn?: string | null;
   long?: number;
   lat?: number;
   aspect?: string | null;
@@ -186,6 +193,7 @@ export interface Tea {
   volume?: number;
   /** Loại cây trà, hiện hỗ trợ "1 lá" và "2 lá" */
   type?: string | null;
+  typeEn?: string | null;
 }
 
 // ---- Order ----
@@ -282,25 +290,32 @@ export interface Product {
   updatedDate?: string | null;
   isDelete?: boolean;
   name?: string | null;
+  nameEn?: string | null;
   categoryId?: number;
   /** Slug nhóm trà của sản phẩm (vd 'luc-tra') - tầng phân loại duy nhất từ pha 1 tái cấu trúc 1/11/2026, thay cho Danh mục. */
   groupId?: string | null;
   price?: number;
   total?: number;
   description?: string | null;
+  descriptionEn?: string | null;
   userManual?: string | null;
+  userManualEn?: string | null;
   storageInstructions?: string | null;
+  storageInstructionsEn?: string | null;
   isActive?: boolean;
   images?: string | null;
   quantity?: number;
   /** Tên bao bì/quy cách từ API (mặc định "Hộp" ở BE). */
   packagingName?: string | null;
+  packagingNameEn?: string | null;
   /** Tên phân biệt biến thể cùng gram (nếu admin đã nhập). */
   variantName?: string | null;
+  variantNameEn?: string | null;
   /** true = set quà tặng, hiển thị dạng set quà (chọn màu, set mix). */
   isGiftSet?: boolean;
   /** Tên bộ sưu tập, ví dụ "Huyền". */
   collectionName?: string | null;
+  collectionNameEn?: string | null;
   /** Màu sắc dạng "Tên:#HEX;Tên:#HEX". */
   colorOptions?: string | null;
 }

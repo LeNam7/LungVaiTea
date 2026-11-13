@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {headers} from 'next/headers';
 import TeaDetailView from './components/TeaDetailView';
 import GiftDetail from './components/GiftDetail';
 import RelatedProducts from './components/RelatedProducts';
@@ -36,6 +37,8 @@ function getFirstImage(images: string | null | undefined): string {
 
 export default async function ChiTietSanPhamTraPage({params}: {params: Promise<{id: string}>}) {
     const {id: idStr} = await params;
+    const headerList = await headers();
+    const isEn = headerList.get('x-next-locale') === 'en';
 
     // Set quà tặng dùng slug (ví dụ gift-huyen-nhat), không phải id số của API.
     if (idStr.startsWith('gift-')) {
@@ -109,6 +112,11 @@ export default async function ChiTietSanPhamTraPage({params}: {params: Promise<{
 
     // Các biến thể cùng dòng trà (cùng nhóm + cùng tên) để chọn quy cách.
     const lineKey = lineKeyForProduct(product, groups);
+    const productName = isEn && product.nameEn?.trim() ? product.nameEn.trim() : (product.name ?? '');
+    const groupId = groupIdForProduct(product, groups);
+    const matchedGroup = groups.find((g) => g.id === groupId);
+    const groupName = isEn && matchedGroup?.nameEn?.trim() ? matchedGroup.nameEn.trim() : (matchedGroup?.name ?? (isEn ? 'Tea Products' : 'Sản phẩm trà'));
+
     const baseVariants = relatedProducts
         .filter((p) => lineKeyForProduct(p, groups) === lineKey)
         .concat(product)
@@ -118,8 +126,8 @@ export default async function ChiTietSanPhamTraPage({params}: {params: Promise<{
             gram: Number(p.quantity ?? 0) > 0 ? Number(p.quantity) : null,
             stock: p.total ?? null,
             images: p.images ?? null,
-            packagingName: p.packagingName ?? null,
-            variantName: p.variantName ?? null,
+            packagingName: isEn && p.packagingNameEn?.trim() ? p.packagingNameEn.trim() : (p.packagingName ?? null),
+            variantName: isEn && p.variantNameEn?.trim() ? p.variantNameEn.trim() : (p.variantName ?? null),
             apiOrder: apiOrderById.get(p.id!) ?? 9999,
         }));
     // Ô chọn "Quy cách đóng gói" sắp theo GIÁ: rẻ trước, đắt sau (cùng giá
@@ -130,8 +138,6 @@ export default async function ChiTietSanPhamTraPage({params}: {params: Promise<{
     // Sản phẩm gợi ý: loại luôn các biến thể cùng dòng (đã nằm ở phần chọn quy cách).
     const relatedLineProducts = relatedProducts.filter((p) => lineKeyForProduct(p, groups) !== lineKey);
 
-    const groupId = groupIdForProduct(product, groups);
-    const groupName = groups.find((g) => g.id === groupId)?.name ?? 'Sản phẩm trà';
     // Mỗi phân loại gắn với đúng 1 ảnh (ảnh bao bì của chính biến thể đó).
     // Thứ tự ẢNH trong gallery khác với ô chọn quy cách: ảnh trà khô (ảnh
     // bìa, row đầu tiên của dòng trên API) rồi tới ảnh nước trà (các phân
@@ -154,26 +160,30 @@ export default async function ChiTietSanPhamTraPage({params}: {params: Promise<{
 
     const accordionItems = [
         {
-            title: 'Thông tin sản phẩm',
-            content: product.description || 'Đang cập nhật.',
+            title: isEn ? 'Product Details' : 'Thông tin sản phẩm',
+            content: (isEn && product.descriptionEn?.trim()) ? product.descriptionEn.trim() : (product.description || (isEn ? 'Updating...' : 'Đang cập nhật.')),
         },
         ...(variants.length > 0
             ? [
                   {
-                      title: 'Quy cách & Khối lượng',
-                      content: `Các quy cách đóng gói của dòng này:\n${variants
-                          .map((v) => `- ${v.packagingName?.trim() ? `${v.packagingName.trim()} ` : ''}${v.gram ? `${v.gram}g` : 'Theo hộp'}: ${(v.price ?? 0).toLocaleString('vi-VN')} VND`)
-                          .join('\n')}`,
+                      title: isEn ? 'Specifications & Packaging' : 'Quy cách & Khối lượng',
+                      content: isEn
+                          ? `Packaging options for this tea line:\n${variants
+                                .map((v) => `- ${v.packagingName?.trim() ? `${v.packagingName.trim()} ` : ''}${v.gram ? `${v.gram}g` : 'Box'}: ${(v.price ?? 0).toLocaleString('en-US')} VND`)
+                                .join('\n')}`
+                          : `Các quy cách đóng gói của dòng này:\n${variants
+                                .map((v) => `- ${v.packagingName?.trim() ? `${v.packagingName.trim()} ` : ''}${v.gram ? `${v.gram}g` : 'Theo hộp'}: ${(v.price ?? 0).toLocaleString('vi-VN')} VND`)
+                                .join('\n')}`,
                   },
               ]
             : []),
         {
-            title: 'Hướng dẫn sử dụng',
-            content: product.userManual || 'Đang cập nhật.',
+            title: isEn ? 'Brewing Instructions' : 'Hướng dẫn sử dụng',
+            content: (isEn && product.userManualEn?.trim()) ? product.userManualEn.trim() : (product.userManual || (isEn ? 'Updating...' : 'Đang cập nhật.')),
         },
         {
-            title: 'Hướng dẫn bảo quản',
-            content: product.storageInstructions || 'Đang cập nhật.',
+            title: isEn ? 'Storage Instructions' : 'Hướng dẫn bảo quản',
+            content: (isEn && product.storageInstructionsEn?.trim()) ? product.storageInstructionsEn.trim() : (product.storageInstructions || (isEn ? 'Updating...' : 'Đang cập nhật.')),
         },
     ];
 
@@ -204,8 +214,8 @@ export default async function ChiTietSanPhamTraPage({params}: {params: Promise<{
             if (!g) continue;
             relatedItems.push({
                 id: g.apiId ?? 0,
-                href: g.apiId ? `/san-pham-tra/${g.apiId}` : `/san-pham-tra/${g.slug}`,
-                name: g.name,
+                href: isEn ? (g.apiId ? `/en/san-pham-tra/${g.apiId}` : `/en/san-pham-tra/${g.slug}`) : (g.apiId ? `/san-pham-tra/${g.apiId}` : `/san-pham-tra/${g.slug}`),
+                name: isEn && g.nameEn?.trim() ? g.nameEn.trim() : g.name,
                 price: g.priceMin,
                 weight: `${g.gram}g`,
                 image: getFirstApiImageUrl(g.image, '/images/shan-tuyet-tea-tree.jpg'),
@@ -219,7 +229,8 @@ export default async function ChiTietSanPhamTraPage({params}: {params: Promise<{
             const firstVariant = line.variants[0];
             relatedItems.push({
                 id: firstVariant?.id ?? 0,
-                name: line.name,
+                href: isEn ? `/en/san-pham-tra/${firstVariant?.id ?? ''}` : `/san-pham-tra/${firstVariant?.id ?? ''}`,
+                name: isEn && (line.nameEn?.trim() || firstVariant?.nameEn?.trim()) ? (line.nameEn?.trim() || firstVariant?.nameEn?.trim())! : line.name,
                 price: line.minPrice,
                 weight: line.minGram ? `${line.minGram}g` : undefined,
                 image: getFirstImage(line.image),
@@ -242,17 +253,17 @@ export default async function ChiTietSanPhamTraPage({params}: {params: Promise<{
 
             {/* ── Breadcrumb ── */}
             <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-[50px] -mt-6 pb-2 text-xs sm:text-sm flex items-center gap-1.5 flex-wrap">
-                <Link href="/" className="hover:text-[#7F9635] opacity-70 transition-colors">
+                <Link href={isEn ? '/en' : '/'} className="hover:text-[#7F9635] opacity-70 transition-colors">
                     Home
                 </Link>
                 <span className="opacity-70">/</span>
-                <Link href="/san-pham-tra" className="hover:text-[#7F9635] opacity-70 transition-colors">
-                    Sản phẩm trà
+                <Link href={isEn ? '/en/san-pham-tra' : '/san-pham-tra'} className="hover:text-[#7F9635] opacity-70 transition-colors">
+                    {isEn ? 'Tea Products' : 'Sản phẩm trà'}
                 </Link>
                 <span className="opacity-70">/</span>
                 {groupId ? (
                     <Link
-                        href={`/san-pham-tra?group=${groupId}`}
+                        href={isEn ? `/en/san-pham-tra?group=${groupId}` : `/san-pham-tra?group=${groupId}`}
                         className="hover:text-[#7F9635] opacity-70 transition-colors"
                     >
                         {groupName}
@@ -261,13 +272,13 @@ export default async function ChiTietSanPhamTraPage({params}: {params: Promise<{
                     <span className="opacity-70">{groupName}</span>
                 )}
                 <span className="opacity-70">/</span>
-                <span className="font-semibold text-[#3B5518] truncate max-w-[200px]">{toTitleCaseVn(product.name ?? '')}</span>
+                <span className="font-semibold text-[#3B5518] truncate max-w-[200px]">{productName}</span>
             </div>
 
             {/* ── Product Section ── */}
             <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-[50px] py-6 lg:py-10">
                 <TeaDetailView
-                    name={product.name ?? ''}
+                    name={productName}
                     productId={product.id!}
                     price={product.price ?? 0}
                     weight={product.quantity ? `${product.quantity}g` : undefined}

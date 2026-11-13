@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {headers} from 'next/headers';
 import ImageGallery from './components/ImageGallery';
 import ProductInfo from './components/ProductInfo';
 import ProductTabs from './components/ProductTabs';
@@ -61,7 +62,27 @@ const DEFAULT_FAQ = [
     },
 ];
 
+const DEFAULT_FAQ_EN = [
+    {
+        q: 'When will I receive my tea harvest?',
+        a: 'Tea will be delivered to your address within 7-14 days following seasonal harvest. We ensure timely delivery and optimal quality preservation.',
+    },
+    {
+        q: 'How can I verify the harvest comes from my adopted tree?',
+        a: '• Complete transparency: Each ancient tree is registered with a unique ID and QR tag, allowing you to track growth, care, and harvest stages.\n• Immersive experience: We invite tree patrons to visit the tea mountain and participate in traditional harvesting and processing.',
+    },
+    {
+        q: 'What if annual yield is lower than estimated?',
+        a: 'In cases of adverse weather impacting yields, we make up the difference with equivalent harvest from the same garden or refund proportionally.',
+    },
+    {
+        q: 'Can I visit the tea garden in person?',
+        a: 'Yes, absolutely! We host regular mountain tea journeys for tree owners. Contact our hotline to book your private tour.',
+    },
+];
+
 const DEFAULT_HARVEST = [{label: 'Vụ Xuân', time: '15/3 - 30/4'}];
+const DEFAULT_HARVEST_EN = [{label: 'Spring Harvest', time: 'March 15 - April 30'}];
 
 
 /* ── Page Component ──────────────────────────────────────────────────────── */
@@ -69,6 +90,8 @@ const DEFAULT_HARVEST = [{label: 'Vụ Xuân', time: '15/3 - 30/4'}];
 export default async function ChiTietCayTraPage({params}: {params: Promise<{id: string}>}) {
     const {id: idStr} = await params;
     const id = parseInt(idStr, 10);
+    const headerList = await headers();
+    const isEn = headerList.get('x-next-locale') === 'en';
 
     // Fetch tea data
     let tea: Tea | null = null;
@@ -124,43 +147,71 @@ export default async function ChiTietCayTraPage({params}: {params: Promise<{id: 
 
     /* Derived values */
     const images = await getImages(tea.images);
-    const gardenName = formatGardenCode(garden);
-    const gardenAddr = garden?.address ?? '';
+    const gardenName = (isEn && garden?.nameEn?.trim()) ? garden.nameEn.trim() : formatGardenCode(garden);
+    const gardenAddr = (isEn && garden?.addressEn?.trim()) ? garden.addressEn.trim() : (garden?.address ?? '');
+    const teaName = (isEn && tea.nameEn?.trim()) ? tea.nameEn.trim() : (tea.name ?? `#${tea.id}`);
+    const teaType = (isEn && tea.typeEn?.trim()) ? tea.typeEn.trim() : (tea.type || (isEn ? '1 bud 1 leaf' : '1 lá'));
+    const teaDesc = (isEn && tea.descriptionEn?.trim())
+        ? tea.descriptionEn.trim()
+        : formatTeaDescription(tea.description || (isEn ? 'Premium ancient tea tree tended by time-honored traditional practices.' : 'Cây trà cổ thụ đặc sản được chăm sóc theo phương pháp truyền thống, cho chất lượng trà thượng hạng.'));
 
-    const infoTable = [
-        {label: 'Mã cây', value: tea.name ?? `#${tea.id}`},
-        {label: 'ID hệ thống', value: `#${tea.id}`},
-        {label: 'Sản lượng', value: formatTeaVolume(tea, '-')},
-        {label: 'Loại cây', value: tea.type || '1 lá'},
-        {label: 'Tuổi cây', value: tea.yearOld && tea.yearOld > 0 ? `${tea.yearOld} năm` : '-'},
-        {label: 'Vườn trà', value: gardenName},
-        {label: 'Khu vực', value: gardenAddr || gardenName},
-        {label: 'Thông số cây', value: tea.aspect ?? 'Đông Nam'},
-        {
-            label: 'Tình trạng',
-            value: tea.sold
-                ? 'Đã bán'
-                : isTeaContactPrice(tea)
-                  ? 'Giá liên hệ'
-                  : isTeaPurchasable(tea)
-                    ? 'Còn bán'
-                    : 'Chưa mở bán',
-        },
-        {label: 'Trạng thái', value: tea.isActive ? 'Đang hoạt động' : 'Tạm ẩn'},
-        {label: 'Tọa độ', value: tea.lat && tea.long ? `${tea.lat}°N, ${tea.long}°E` : '-'},
-    ];
+    const infoTable = isEn
+        ? [
+              {label: 'Tree Code', value: teaName},
+              {label: 'System ID', value: `#${tea.id}`},
+              {label: 'Annual Yield', value: tea.volume && tea.volume > 0 ? `${tea.volume} kg/year` : '-'},
+              {label: 'Tree Type', value: teaType},
+              {label: 'Tree Age', value: tea.yearOld && tea.yearOld > 0 ? `${tea.yearOld} years` : '-'},
+              {label: 'Tea Garden', value: gardenName},
+              {label: 'Location', value: gardenAddr || gardenName},
+              {label: 'Orientation', value: tea.aspect ?? 'South-East'},
+              {
+                  label: 'Status',
+                  value: tea.sold
+                      ? 'Sold'
+                      : isTeaContactPrice(tea)
+                        ? 'Contact for Price'
+                        : isTeaPurchasable(tea)
+                          ? 'Available to Purchase'
+                          : 'Coming Soon',
+              },
+              {label: 'State', value: tea.isActive ? 'Active' : 'Hidden'},
+              {label: 'Coordinates', value: tea.lat && tea.long ? `${tea.lat}°N, ${tea.long}°E` : '-'},
+          ]
+        : [
+              {label: 'Mã cây', value: tea.name ?? `#${tea.id}`},
+              {label: 'ID hệ thống', value: `#${tea.id}`},
+              {label: 'Sản lượng', value: formatTeaVolume(tea, '-')},
+              {label: 'Loại cây', value: tea.type || '1 lá'},
+              {label: 'Tuổi cây', value: tea.yearOld && tea.yearOld > 0 ? `${tea.yearOld} năm` : '-'},
+              {label: 'Vườn trà', value: gardenName},
+              {label: 'Khu vực', value: gardenAddr || gardenName},
+              {label: 'Thông số cây', value: tea.aspect ?? 'Đông Nam'},
+              {
+                  label: 'Tình trạng',
+                  value: tea.sold
+                      ? 'Đã bán'
+                      : isTeaContactPrice(tea)
+                        ? 'Giá liên hệ'
+                        : isTeaPurchasable(tea)
+                          ? 'Còn bán'
+                          : 'Chưa mở bán',
+              },
+              {label: 'Trạng thái', value: tea.isActive ? 'Đang hoạt động' : 'Tạm ẩn'},
+              {label: 'Tọa độ', value: tea.lat && tea.long ? `${tea.lat}°N, ${tea.long}°E` : '-'},
+          ];
 
     const relatedItems = await Promise.all(
         relatedTeas.map(async (t) => {
             const imgs = await getImages(t.images);
             return {
                 id: t.id!,
-                code: t.name ?? `#${t.id}`,
-                name: t.name ?? `Cây trà #${t.id}`,
+                code: (isEn && t.nameEn?.trim()) ? t.nameEn.trim() : (t.name ?? `#${t.id}`),
+                name: (isEn && t.nameEn?.trim()) ? t.nameEn.trim() : (t.name ?? `Cây trà #${t.id}`),
                 priceRange: formatTeaCost(t),
-                yield: t.volume && t.volume > 0 ? `${t.volume.toLocaleString('vi-VN')} kg/năm` : '',
-                teaType: t.type,
-                buyers: t.sold ? 'Đã bán' : '',
+                yield: t.volume && t.volume > 0 ? (isEn ? `${t.volume.toLocaleString('en-US')} kg/year` : `${t.volume.toLocaleString('vi-VN')} kg/năm`) : '',
+                teaType: (isEn && t.typeEn?.trim()) ? t.typeEn.trim() : t.type,
+                buyers: t.sold ? (isEn ? 'Sold' : 'Đã bán') : '',
                 images: imgs[0],
             };
         }),
@@ -182,12 +233,12 @@ export default async function ChiTietCayTraPage({params}: {params: Promise<{id: 
                     className="absolute inset-x-0 bottom-3 z-20 px-4 text-xs leading-[18px] text-white sm:bottom-4 sm:px-8 sm:text-sm sm:leading-5 lg:px-16"
                 >
                     <div className="flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 overflow-hidden lg:flex-nowrap">
-                        <Link href="/" className="shrink-0 transition-colors hover:text-[#7F9635]">
+                        <Link href={isEn ? '/en' : '/'} className="shrink-0 transition-colors hover:text-[#7F9635]">
                             Home
                         </Link>
                         <span className="shrink-0">/</span>
-                        <Link href="/bo-suu-tap-cay-tra" className="shrink-0 transition-colors hover:text-[#7F9635]">
-                            Bộ sưu tập cây trà
+                        <Link href={isEn ? '/en/bo-suu-tap-cay-tra' : '/bo-suu-tap-cay-tra'} className="shrink-0 transition-colors hover:text-[#7F9635]">
+                            {isEn ? 'Tea Tree Collection' : 'Bộ sưu tập cây trà'}
                         </Link>
                         <span className="shrink-0">/</span>
                         <span className="block max-w-[180px] shrink-0 truncate sm:max-w-[260px] lg:max-w-[320px]">
@@ -196,9 +247,9 @@ export default async function ChiTietCayTraPage({params}: {params: Promise<{id: 
                         <span className="shrink-0">/</span>
                         <span
                             className="block min-w-0 max-w-[300px] truncate sm:max-w-[420px] lg:max-w-[45vw]"
-                            title={tea.name ?? ''}
+                            title={teaName}
                         >
-                            {tea.name}
+                            {teaName}
                         </span>
                     </div>
                 </nav>
@@ -209,15 +260,15 @@ export default async function ChiTietCayTraPage({params}: {params: Promise<{id: 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
                     <ImageGallery
                         images={images}
-                        name={tea.name ?? ''}
+                        name={teaName}
                         teaId={tea.id}
                     />
                     <ProductInfo
-                        name={tea.name ?? ''}
+                        name={teaName}
                         gardenName={gardenName}
                         price={tea.price ?? 0}
                         volume={tea.volume}
-                        teaType={tea.type}
+                        teaType={teaType}
                         teaId={tea.id!}
                         sold={tea.sold ?? false}
                         images={tea.images}
@@ -227,10 +278,10 @@ export default async function ChiTietCayTraPage({params}: {params: Promise<{id: 
 
             {/* ── Tabs Section ── */}
             <ProductTabs
-                description={formatTeaDescription(tea.description || 'Cây trà cổ thụ đặc sản được chăm sóc theo phương pháp truyền thống, cho chất lượng trà thượng hạng.') }
+                description={teaDesc}
                 infoTable={infoTable}
-                harvestPhases={DEFAULT_HARVEST}
-                faqData={DEFAULT_FAQ}
+                harvestPhases={isEn ? DEFAULT_HARVEST_EN : DEFAULT_HARVEST}
+                faqData={isEn ? DEFAULT_FAQ_EN : DEFAULT_FAQ}
             />
 
             {/* ── Related ── */}

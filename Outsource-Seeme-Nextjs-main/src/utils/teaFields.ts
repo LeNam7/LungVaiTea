@@ -146,8 +146,14 @@ export const formatGardenCode = (garden: {code?: string | null; name?: string | 
     return code ? 'Mã vườn: ' + code : (name ? name : 'Mã vườn: -');
 };
 
-/** Tên hiển thị vườn: tên thật + mã, ví dụ "Vườn Nhiềm · Mã 01", để khách thấy tên vườn chứ không chỉ mã. */
-export const formatGardenDisplay = (garden: {code?: string | null; name?: string | null} | null | undefined) => {
+/** Tên hiển thị vườn: tên thật + mã, ví dụ "Vườn Nhiềm · Mã 01". Khi locale === 'en' và có nameEn thì ưu tiên hiển thị nameEn. */
+export const formatGardenDisplay = (
+    garden: {code?: string | null; name?: string | null; nameEn?: string | null} | null | undefined,
+    locale?: string
+) => {
+    if (locale === 'en' && garden?.nameEn?.trim()) {
+        return garden.nameEn.trim();
+    }
     const name = garden?.name?.replace(/^Vườn trà\s+/i, '').trim() ?? '';
     const code = garden?.code?.trim() || GARDEN_CODES[name];
     if (name && code) return `Vườn ${name} · Mã ${code}`;

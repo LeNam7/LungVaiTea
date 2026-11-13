@@ -25,7 +25,11 @@ namespace Seeme.Domain.Models.Order
         public int TotalPrice { get; set; }
         public bool PrePayment { get; set; }
         public int TotalPayment { get; set; }
+        public string ReasonCancellation { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; }
+        /// <summary>Phương thức thanh toán rút từ DeliveryInformation ("cod"/"qr").
+        /// Danh sách trước đây không có trường này nên cột PTTT ở CMS luôn gạch ngang.</summary>
+        public string PaymentMethod { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -95,7 +99,8 @@ namespace Seeme.Domain.Models.Order
         public string DeliveryInformation { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
-        public OrderTeaStatus Status { get; set; } // Trạng thái cây trà (ví dụ: Chờ xác nhận, Đang chuẩn bị hàng, Hoàn thành, v.v.)
+        public OrderTeaStatus Status { get; set; } // Trạng thái cây trà (ví dụ: Chờ xác nhận, Đang trồng, Hoàn thành, v.v.)
+        public string ReasonCancellation { get; set; } = string.Empty;
 
         // Json OrderTeaDetailRequest
         public string? OrderDetails { get; set; }
@@ -109,9 +114,11 @@ namespace Seeme.Domain.Models.Order
         public int OrderId { get; set; }
         public int OrderProductId { get; set; }
         public int TotalPrice { get; set; }
+        public int TotalPayment { get; set; }
         public string OrderType { get; set; }
         public string DeliveryInformation { get; set; }
         public OrderProductStatus Status { get; set; } // Trạng thái cây trà (ví dụ: Chờ xác nhận, Đang chuẩn bị hàng, Hoàn thành, v.v.)
+        public string ReasonCancellation { get; set; } = string.Empty;
 
         // Json OrderTeaDetailRequest
         public string? OrderDetails { get; set; }

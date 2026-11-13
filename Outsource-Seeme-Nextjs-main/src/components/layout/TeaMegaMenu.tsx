@@ -39,6 +39,7 @@ function priceRangeLabel(line: ProductLine): string {
  */
 export default function TeaMegaMenu({open, onNavigate}: Props) {
     const {t, locale} = useLanguage();
+    const isEn = locale === 'en';
     const localizePath = (path: string) => locale === 'en' ? `/en${path === '/' ? '' : path}` : path;
     const [products, setProducts] = React.useState<Product[]>([]);
     const [groups, setGroups] = React.useState<TeaGroup[]>(TEA_GROUPS);
@@ -80,7 +81,9 @@ export default function TeaMegaMenu({open, onNavigate}: Props) {
     const safeActiveGroup = groups.some((g) => g.id === activeGroup) ? activeGroup : (groups[0]?.id ?? 'luc-tra');
     const activeGroupData = groups.find((g) => g.id === safeActiveGroup) ?? groups[0] ?? TEA_GROUPS[0];
     // Mô tả nhóm lấy từ bản ghi nhóm trà trên API (fallback mô tả design).
-    const activeGroupDescription = t(`teaGroups.${safeActiveGroup}Desc`, activeGroupData.description);
+    const activeGroupDescription = isEn && activeGroupData.descriptionEn?.trim()
+        ? activeGroupData.descriptionEn
+        : t(`teaGroups.${safeActiveGroup}Desc`, activeGroupData.description);
     const activeLines = lines.filter((line) => line.groupId === safeActiveGroup);
     const giftCount = apiGifts.length;
 
@@ -95,11 +98,13 @@ export default function TeaMegaMenu({open, onNavigate}: Props) {
     if (!open) return null;
 
     return (
-        <div className="seeme-mega-pop absolute left-1/2 top-full z-40 w-[min(1100px,96vw)] -translate-x-1/2 pt-5">
-            {/* Mũi tên trỏ lên đúng chữ "Sản phẩm trà" (panel căn giữa theo link
-                nên tâm panel = tâm link; nửa dưới mũi tên bị panel che đi). */}
-            <div aria-hidden className="pointer-events-none absolute left-1/2 top-[14px] h-3 w-3 -translate-x-1/2 rotate-45 bg-[#F1EEE0]" />
-            <div className="relative flex gap-6 overflow-hidden rounded-lg bg-[#F1EEE0] p-3 shadow-[0_16px_40px_rgba(47,68,19,0.25)]">
+        <div className="seeme-mega-pop absolute left-1/2 top-full z-40 w-[min(1100px,calc(100vw-32px))] -translate-x-1/2 pt-2">
+            {/* Mũi tên trỏ lên đúng chữ "Sản phẩm trà" / "Tea Products" (nằm cách tâm panel ~90px về bên trái, tức ~42% chiều rộng panel) */}
+            <div
+                aria-hidden
+                className="pointer-events-none absolute left-[42%] top-[3px] h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-[#7F9635]/30 bg-[#F1EEE0]"
+            />
+            <div className="relative flex gap-6 overflow-hidden rounded-xl border border-[#7F9635]/30 bg-[#F1EEE0] p-4 shadow-[0_16px_40px_rgba(47,68,19,0.25)]">
                 {/* Cột trái: Nhóm trà */}
                 <div className="flex w-[280px] shrink-0 flex-col gap-2 overflow-y-auto">
                     <p className="px-4 pt-2 text-sm font-semibold text-[#7B943E]">{t('teaMega.teaGroups', 'Nhóm trà')}</p>
@@ -124,7 +129,7 @@ export default function TeaMegaMenu({open, onNavigate}: Props) {
                                     className="block"
                                 >
                                     <span className={`block text-sm font-semibold ${active ? 'text-[#3B5518]' : 'text-[#3B5518]/85'}`}>
-                                        {t(`teaGroups.${group.id}`, group.name)}
+                                        {isEn && group.nameEn?.trim() ? group.nameEn : t(`teaGroups.${group.id}`, group.name)}
                                     </span>
                                     <span className="block text-xs text-[#3B5518]/70">{countForGroup(group.id)}</span>
                                 </Link>
@@ -143,7 +148,9 @@ export default function TeaMegaMenu({open, onNavigate}: Props) {
                 {/* Cột phải: chi tiết nhóm - ngắn gọn, chỉ để chọn dòng trà */}
                 <div className="min-w-0 flex-1 pr-2">
                     <div className="flex items-baseline justify-between gap-4">
-                        <h3 className="font-source-serif-4 text-2xl text-[#3B5518]">{t(`teaGroups.${safeActiveGroup}`, activeGroupData.name)}</h3>
+                        <h3 className="font-source-serif-4 text-2xl text-[#3B5518]">
+                            {isEn && activeGroupData.nameEn?.trim() ? activeGroupData.nameEn : t(`teaGroups.${safeActiveGroup}`, activeGroupData.name)}
+                        </h3>
                         <span className="shrink-0 text-xs text-[#3B5518]/70">{countForGroup(safeActiveGroup)}</span>
                     </div>
                     <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[#3B5518]/80">
@@ -161,7 +168,9 @@ export default function TeaMegaMenu({open, onNavigate}: Props) {
                                         onClick={onNavigate}
                                         className="rounded-lg border border-[#7F9635]/30 bg-white/70 p-4 transition hover:bg-white"
                                     >
-                                        <p className="font-semibold text-[#3B5518]">{collection.name}</p>
+                                        <p className="font-semibold text-[#3B5518]">
+                                            {isEn && collection.nameEn?.trim() ? collection.nameEn : collection.name}
+                                        </p>
                                         <p className="mt-1 text-xs text-[#3B5518]/70">
                                             {!loaded ? t('common.loading', 'Đang tải...') : items.length > 0 ? `${items.length} ${t('teaMega.giftsCount', 'set quà tặng')}` : t('teaMega.updating', 'Đang cập nhật')}
                                         </p>
@@ -203,7 +212,9 @@ export default function TeaMegaMenu({open, onNavigate}: Props) {
                                                             }}
                                                         />
                                                     </span>
-                                                    <span className="line-clamp-2 font-semibold leading-snug text-[#3B5518]">{line.name}</span>
+                                                    <span className="line-clamp-2 font-semibold leading-snug text-[#3B5518]">
+                                                        {isEn && line.nameEn?.trim() ? line.nameEn : line.name}
+                                                    </span>
                                                 </span>
                                                 <span className="shrink-0 text-right text-sm text-[#3B5518]/70">
                                                     <span className="font-semibold text-[#7F9635]">{priceRangeLabel(line)}</span>

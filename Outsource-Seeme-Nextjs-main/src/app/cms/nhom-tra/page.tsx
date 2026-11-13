@@ -66,8 +66,10 @@ export default function NhomTraPage() {
         setEditing(record);
         form.setFieldsValue({
             name: record.name ?? '',
+            nameEn: record.nameEn ?? '',
             slug: record.slug ?? '',
             description: record.description ?? '',
+            descriptionEn: record.descriptionEn ?? '',
             imageUrl: record.imageUrl ?? '',
             sortOrder: record.sortOrder ?? 0,
             isActive: record.isActive !== false,
@@ -88,7 +90,9 @@ export default function NhomTraPage() {
         const payload: TeaGroupRecord = {
             slug,
             name: String(values.name ?? '').trim(),
+            nameEn: String(values.nameEn ?? '').trim() || null,
             description: String(values.description ?? '').trim() || null,
+            descriptionEn: String(values.descriptionEn ?? '').trim() || null,
             imageUrl: String(values.imageUrl ?? '').trim() || null,
             sortOrder: Number(values.sortOrder ?? 0),
             isActive: values.isActive !== false,
@@ -226,13 +230,21 @@ export default function NhomTraPage() {
                 destroyOnHidden
             >
                 <Form form={form} layout="vertical" className="mt-4">
-                    <Form.Item
-                        name="name"
-                        label="Tên nhóm trà"
-                        rules={[{required: true, message: 'Nhập tên nhóm trà'}]}
-                    >
-                        <Input placeholder="Ví dụ: Trà Ô Long" onChange={handleNameChange} />
-                    </Form.Item>
+                    <div className="grid grid-cols-2 gap-3">
+                        <Form.Item
+                            name="name"
+                            label="Tên nhóm trà (Tiếng Việt)"
+                            rules={[{required: true, message: 'Nhập tên nhóm trà'}]}
+                        >
+                            <Input placeholder="Ví dụ: Trà Ô Long" onChange={handleNameChange} />
+                        </Form.Item>
+                        <Form.Item
+                            name="nameEn"
+                            label="Tên nhóm trà (Tiếng Anh)"
+                        >
+                            <Input placeholder="Ví dụ: Oolong Tea" />
+                        </Form.Item>
+                    </div>
                     <Form.Item
                         name="slug"
                         label="Slug"
@@ -244,9 +256,14 @@ export default function NhomTraPage() {
                     >
                         <Input placeholder="Ví dụ: tra-o-long" disabled={!!editing} />
                     </Form.Item>
-                    <Form.Item name="description" label="Mô tả nhóm trà (hiện ở mega menu)">
-                        <Input.TextArea rows={3} placeholder="Mô tả nhóm trà..." />
-                    </Form.Item>
+                    <div className="grid grid-cols-2 gap-3">
+                        <Form.Item name="description" label="Mô tả nhóm (Tiếng Việt)">
+                            <Input.TextArea rows={3} placeholder="Mô tả nhóm trà..." />
+                        </Form.Item>
+                        <Form.Item name="descriptionEn" label="Mô tả nhóm (Tiếng Anh)">
+                            <Input.TextArea rows={3} placeholder="Group description in English..." />
+                        </Form.Item>
+                    </div>
                     <Form.Item name="imageUrl" label="Ảnh đại diện nhóm">
                         <ImageUploadField maxCount={1} />
                     </Form.Item>

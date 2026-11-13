@@ -224,6 +224,11 @@ export default function CayTraPage() {
             setTeaType(tea.type || '1 lá');
             form.setFieldsValue({
                 ...tea,
+                name: tea.name ?? '',
+                nameEn: tea.nameEn ?? '',
+                typeEn: tea.typeEn ?? '',
+                description: tea.description ?? '',
+                descriptionEn: tea.descriptionEn ?? '',
                 categoryIds: tea.categoryIds ? tea.categoryIds.split(',').map(Number) : [],
             });
             setModalOpen(true);
@@ -244,8 +249,13 @@ export default function CayTraPage() {
         try {
             const payload: Tea = {
                 ...values,
-                volume: Number(values.volume ?? 0),
+                name: (values.name ?? '').trim(),
+                nameEn: (values.nameEn ?? '').trim() || null,
                 type: teaType,
+                typeEn: (values.typeEn ?? '').trim() || null,
+                description: (values.description ?? '').trim() || null,
+                descriptionEn: (values.descriptionEn ?? '').trim() || null,
+                volume: Number(values.volume ?? 0),
                 // Form không có ô chọn phân loại nhưng BE bắt buộc CategoryIds
                 // (thiếu là 400 'The CategoryIds field is required.'). Mọi cây
                 // thật hiện tại đều mang '1' nên mặc định '1' khi form không có
@@ -924,13 +934,21 @@ export default function CayTraPage() {
                     className="mt-4"
                 >
                     <Row gutter={16}>
-                        <Col span={24}>
+                        <Col span={12}>
                             <Form.Item
                                 name="name"
-                                label="Tên/Mã cây trà (Theo Excel)"
+                                label="Tên/Mã cây trà (Tiếng Việt)"
                                 rules={[{required: true, message: 'Nhập mã cây trà'}]}
                             >
-                                <Input placeholder="Ví dụ: 01-001-A" />
+                                <Input placeholder="Ví dụ: 01-001-A hoặc Cây Cổ Thụ LVT-001" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="nameEn"
+                                label="Tên/Mã cây trà (Tiếng Anh)"
+                            >
+                                <Input placeholder="Ví dụ: Ancient Shan Tuyet Tree LVT-001" />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
@@ -963,7 +981,7 @@ export default function CayTraPage() {
                         </Col>
                         <Col span={12}>
                             <Form.Item
-                                label="Loại cây"
+                                label="Loại cây (Tiếng Việt)"
                                 required
                             >
                                 <Select
@@ -975,6 +993,14 @@ export default function CayTraPage() {
                                         {value: '2 lá', label: '2 lá'},
                                     ]}
                                 />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="typeEn"
+                                label="Loại cây (Tiếng Anh)"
+                            >
+                                <Input placeholder="Ví dụ: Ancient 1 bud 1 leaf" />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
@@ -1012,7 +1038,7 @@ export default function CayTraPage() {
                                 <Input placeholder="Ví dụ: Đông Nam" />
                             </Form.Item>
                         </Col>
-                        <Col span={8}>
+                        <Col span={6}>
                             <Form.Item
                                 name="lat"
                                 label="Vĩ độ (lat)"
@@ -1024,7 +1050,7 @@ export default function CayTraPage() {
                                 />
                             </Form.Item>
                         </Col>
-                        <Col span={8}>
+                        <Col span={6}>
                             <Form.Item
                                 name="long"
                                 label="Kinh độ (long)"
@@ -1036,7 +1062,7 @@ export default function CayTraPage() {
                                 />
                             </Form.Item>
                         </Col>
-                        <Col span={8}>
+                        <Col span={6}>
                             <Form.Item
                                 name="isActive"
                                 label="Hiện"
@@ -1045,7 +1071,7 @@ export default function CayTraPage() {
                                 <Switch />
                             </Form.Item>
                         </Col>
-                        <Col span={8}>
+                        <Col span={6}>
                             <Form.Item
                                 name="sold"
                                 label="Đã bán"
@@ -1054,14 +1080,25 @@ export default function CayTraPage() {
                                 <Switch />
                             </Form.Item>
                         </Col>
-                        <Col span={24}>
+                        <Col span={12}>
                             <Form.Item
                                 name="description"
-                                label="Mô tả"
+                                label="Mô tả (Tiếng Việt)"
                             >
                                 <Input.TextArea
                                     rows={3}
                                     placeholder="Mô tả về cây trà..."
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="descriptionEn"
+                                label="Mô tả (Tiếng Anh)"
+                            >
+                                <Input.TextArea
+                                    rows={3}
+                                    placeholder="Ancient tea tree description in English..."
                                 />
                             </Form.Item>
                         </Col>

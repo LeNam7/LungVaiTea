@@ -19,7 +19,7 @@ export default async function HomeLayout({children}: {children: React.ReactNode}
             <div>
                 <ButtonContactFixed />
                 <HeaderClient />
-                <div className="bg-[#ddd1b9] pt-[60px]">{children}</div>
+                <div className="bg-[#ddd1b9] pt-[60px] lg:pt-[70px]">{children}</div>
                 <Footer />
                 <ToastContainer />
             </div>

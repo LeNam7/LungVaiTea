@@ -266,7 +266,7 @@ export default function ProductInfo({
             </div>
 
             <div className="mt-5 space-y-3">
-                <p>Số lần thu hoạch trong năm: <strong>1 lần - Vụ Xuân</strong></p>
+                <p>{t('treeDetail.harvestCount', 'Số lần thu hoạch trong năm:')} <strong>{t('treeDetail.harvestValue', '1 lần - Vụ Xuân')}</strong></p>
                 <p>{t('treeDetail.finishedProduct', 'Loại thành phẩm:')} <strong>{TEA_SPRING_PRODUCT}</strong></p>
                 <p>{t('treeDetail.quantityPerYear', 'Số lượng:')} <strong>{volume && volume > 0 ? `${volume.toLocaleString('vi-VN')} ${t('treeDetail.dryTeaPerYear', 'kg trà khô/năm')}` : '-'}</strong></p>
             </div>

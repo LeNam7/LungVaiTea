@@ -90,7 +90,12 @@ export default function VuonPage() {
             const garden = unwrapApiData<Garden>(res);
             form.setFieldsValue({
                 ...garden,
+                name: garden.name ?? '',
+                nameEn: garden.nameEn ?? '',
+                address: garden.address ?? '',
+                addressEn: garden.addressEn ?? '',
                 gardenDescription: garden.description ?? '',
+                descriptionEn: garden.descriptionEn ?? '',
             });
             setModalOpen(true);
         } catch {
@@ -105,8 +110,15 @@ export default function VuonPage() {
         const {gardenDescription, ...apiValues} = values;
         setSaving(true);
         try {
-            // Mô tả vườn lưu thẳng vào API (Garden.description).
-            const payload = {...apiValues, description: (gardenDescription ?? '').trim()};
+            const payload = {
+                ...apiValues,
+                name: (apiValues.name ?? '').trim(),
+                nameEn: (apiValues.nameEn ?? '').trim() || null,
+                address: (apiValues.address ?? '').trim() || null,
+                addressEn: (apiValues.addressEn ?? '').trim() || null,
+                description: (gardenDescription ?? '').trim() || null,
+                descriptionEn: (apiValues.descriptionEn ?? '').trim() || null,
+            };
             if (editingId) {
                 await updateGardenAPI(editingId, payload);
                 messageApi.success('Cập nhật vườn thành công');
@@ -310,31 +322,49 @@ export default function VuonPage() {
                     layout="vertical"
                     className="mt-4"
                 >
-                    <Form.Item
-                        name="name"
-                        label="Tên vườn"
-                        rules={[{required: true, message: 'Nhập tên vườn'}]}
-                    >
-                        <Input placeholder="Ví dụ: Nhiềm, Chúi, Pèng, Hậu, Sui, Bằng, Cháp, Hẹc" />
-                    </Form.Item>
-                    <Form.Item
-                        name="address"
-                        label="Địa chỉ"
-                    >
-                        <Input placeholder="Địa chỉ vườn..." />
-                    </Form.Item>
-                    <Alert
-                        type="info"
-                        showIcon
-                        message="Mô tả vườn hiện lưu tạm trên trình duyệt này (backend chưa có API mô tả vườn). Khi API có, cấu hình này sẽ được chuyển sang API mà không cần sửa giao diện."
-                        style={{marginBottom: 16}}
-                    />
-                    <Form.Item
-                        name="gardenDescription"
-                        label="Mô tả vườn (hiển thị ở trang Bộ sưu tập cây trà)"
-                    >
-                        <Input.TextArea rows={3} placeholder="Mô tả vườn, vị trí, đặc điểm cây trà trong vườn..." />
-                    </Form.Item>
+                    <div className="grid grid-cols-2 gap-3">
+                        <Form.Item
+                            name="name"
+                            label="Tên vườn (Tiếng Việt)"
+                            rules={[{required: true, message: 'Nhập tên vườn'}]}
+                        >
+                            <Input placeholder="Ví dụ: Vườn Đỉnh Mây Tây Côn Lĩnh" />
+                        </Form.Item>
+                        <Form.Item
+                            name="nameEn"
+                            label="Tên vườn (Tiếng Anh)"
+                        >
+                            <Input placeholder="Ví dụ: Tay Con Linh Cloud Peak Garden" />
+                        </Form.Item>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <Form.Item
+                            name="address"
+                            label="Địa chỉ (Tiếng Việt)"
+                        >
+                            <Input placeholder="Dãy Tây Côn Lĩnh, Xã Phương Độ, TP. Hà Giang" />
+                        </Form.Item>
+                        <Form.Item
+                            name="addressEn"
+                            label="Địa chỉ (Tiếng Anh)"
+                        >
+                            <Input placeholder="Tay Con Linh Mountain, Phuong Do, Ha Giang" />
+                        </Form.Item>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <Form.Item
+                            name="gardenDescription"
+                            label="Mô tả vườn (Tiếng Việt)"
+                        >
+                            <Input.TextArea rows={3} placeholder="Mô tả vườn, vị trí, đặc điểm cây trà..." />
+                        </Form.Item>
+                        <Form.Item
+                            name="descriptionEn"
+                            label="Mô tả vườn (Tiếng Anh)"
+                        >
+                            <Input.TextArea rows={3} placeholder="Garden description, altitude, ancient trees..." />
+                        </Form.Item>
+                    </div>
                     <Form.Item
                         name="isActive"
                         label="Kích hoạt"

@@ -26,45 +26,62 @@ export type TeaGroupId = string;
 export interface TeaGroup {
     id: TeaGroupId;
     name: string;
+    nameEn?: string | null;
     description: string;
+    descriptionEn?: string | null;
 }
 
 export const TEA_GROUPS: TeaGroup[] = [
     {
         id: 'luc-tra',
         name: 'Lục trà',
+        nameEn: 'Green Tea',
         description:
             'Là phẩm trà quen thuộc của người dân Việt Nam ta, ưa vị đắng, chát và ngọt hậu. Có thể được làm từ búp chè 1 tôm 1 lá, hoặc 1 tôm 2 lá, định dạng theo nhiều hình dáng khác nhau: xoăn, móc câu, hoặc để thẳng như hình dáng ban đầu. Cách chế biến khá cầu kỳ tạo hương tạo vị đặc trưng cho trà xanh.',
+        descriptionEn:
+            'A quintessential Vietnamese tea crafted from tender 1-bud-1-leaf or 1-bud-2-leaf shoots. Renowned for its brisk vibrancy and sweet lingering finish.',
     },
     {
         id: 'hong-tra',
         name: 'Hồng trà',
+        nameEn: 'Black Tea',
         description:
             'Dòng hồng trà cao cấp được làm từ những búp trà Shan Tuyết cổ thụ lâu năm. Vị trà đậm, hậu ngọt sâu, màu nước ánh hồng đặc trưng.',
+        descriptionEn:
+            'A premium black tea crafted from centuries-old Shan Tuyet ancient tea buds, characterized by its deep body and radiant ruby-amber liquor.',
     },
     {
         id: 'bach-tra',
         name: 'Bạch Trà',
+        nameEn: 'White Tea',
         description:
             'Dòng bạch trà nhẹ nhàng, thanh khiết, được làm từ những búp trà non tuyển chọn của cây trà Shan Tuyết cổ thụ.',
+        descriptionEn:
+            'A delicate, ethereal white tea harvested from pristine Shan Tuyet ancient tea buds.',
     },
     {
         id: 'pho-nhi-song',
         name: 'Phổ Nhĩ Sống',
+        nameEn: "Raw Pu'er",
         description:
             'Dòng trà Phổ Nhĩ sống, càng để lâu càng lên hương. Hiện chưa có sản phẩm nào trên hệ thống, sẽ cập nhật khi có hàng.',
+        descriptionEn:
+            "Raw Sheng Pu'er tea, naturally aged to deepen in complexity over time. Currently updating availability.",
     },
     {
         id: 'set-qua-tang',
         name: 'Set quà tặng',
+        nameEn: 'Gift Sets',
         description:
             'Các bộ sưu tập quà tặng trà, đóng gói theo set với nhiều lựa chọn quy cách và màu sắc.',
+        descriptionEn:
+            'Curated tea gift collections in elegant packaging with diverse packaging options.',
     },
 ];
 
 /** Chuyển bản ghi nhóm trà từ API thành TeaGroup hiển thị (fallback về 5 nhóm cũ khi thiếu tên/mô tả). */
 export function mapTeaGroupRecords(
-    records: Array<{slug?: string | null; name?: string | null; description?: string | null}>,
+    records: Array<{slug?: string | null; name?: string | null; nameEn?: string | null; description?: string | null; descriptionEn?: string | null}>,
 ): TeaGroup[] {
     return records
         .map((g) => {
@@ -74,7 +91,9 @@ export function mapTeaGroupRecords(
             return {
                 id: slug,
                 name: (g.name ?? '').trim() || legacy?.name || slug,
+                nameEn: (g.nameEn ?? '').trim() || legacy?.nameEn || null,
                 description: (g.description ?? '').trim() || legacy?.description || '',
+                descriptionEn: (g.descriptionEn ?? '').trim() || legacy?.descriptionEn || null,
             } as TeaGroup;
         })
         .filter((g): g is TeaGroup => g !== null);
@@ -105,8 +124,10 @@ export function normalizeLineName(name?: string | null): string {
 export interface ProductLine {
     key: string;
     name: string;
+    nameEn?: string | null;
     groupId: TeaGroupId | null;
     groupName: string;
+    groupNameEn?: string | null;
     variants: Product[];
     minPrice: number;
     maxPrice: number;
@@ -114,6 +135,7 @@ export interface ProductLine {
     maxGram: number | null;
     image: string | null;
     description: string | null;
+    descriptionEn?: string | null;
     createdDate: string | null;
 }
 
@@ -141,13 +163,18 @@ export function groupProductsIntoLines(
                 existing.maxGram = existing.maxGram === null ? gram : Math.max(existing.maxGram, gram);
             }
             if (!existing.image && product.images) existing.image = product.images;
+            if (!existing.nameEn && product.nameEn) existing.nameEn = product.nameEn;
             if (!existing.description && product.description) existing.description = product.description;
+            if (!existing.descriptionEn && product.descriptionEn) existing.descriptionEn = product.descriptionEn;
         } else {
+            const grp = groups.find((g) => g.id === groupId);
             byKey.set(key, {
                 key,
                 name,
+                nameEn: product.nameEn ?? null,
                 groupId,
-                groupName: groups.find((g) => g.id === groupId)?.name ?? 'Sản phẩm trà',
+                groupName: grp?.name ?? 'Sản phẩm trà',
+                groupNameEn: grp?.nameEn ?? grp?.name ?? 'Tea products',
                 variants: [product],
                 minPrice: price,
                 maxPrice: price,
@@ -155,6 +182,7 @@ export function groupProductsIntoLines(
                 maxGram: Number.isFinite(gram) && gram > 0 ? gram : null,
                 image: product.images ?? null,
                 description: product.description ?? null,
+                descriptionEn: product.descriptionEn ?? null,
                 createdDate: product.createdDate ?? null,
             });
         }
@@ -223,6 +251,7 @@ export interface GiftPackaging {
     apiId: number;
     /** Tên quy cách, ví dụ set mix các dòng trà. */
     packaging: string;
+    packagingEn?: string | null;
     price: number;
     gram: number;
     /** Tồn kho của row quy cách (Product.total); <= 0 là hết hàng, không cho thanh toán. */
@@ -230,11 +259,13 @@ export interface GiftPackaging {
     image: string | null;
     colors: GiftColor[];
     description: string;
+    descriptionEn?: string | null;
 }
 
 export interface GiftProduct {
     slug: string;
     name: string;
+    nameEn?: string | null;
     collectionId: string;
     priceMin: number;
     priceMax: number;
@@ -244,13 +275,17 @@ export interface GiftProduct {
     maxGram: number | null;
     /** Quy cách đóng gói theo design, ví dụ set mix các dòng trà. */
     packaging: string;
+    packagingEn?: string | null;
     colors: GiftColor[];
     description: string;
+    descriptionEn?: string | null;
     image: string | null;
     /** Id thật trên API (khi set quà lấy từ API). */
     apiId?: number;
     userManual?: string | null;
+    userManualEn?: string | null;
     storageInstructions?: string | null;
+    storageInstructionsEn?: string | null;
     /** Các quy cách đóng gói của set (mỗi quy cách là 1 row API). Mặc định chọn quy cách rẻ nhất. */
     packagings: GiftPackaging[];
 }
@@ -258,34 +293,49 @@ export interface GiftProduct {
 export interface GiftCollection {
     id: string;
     name: string;
+    nameEn?: string;
     shortName: string;
+    shortNameEn?: string;
     description: string;
+    descriptionEn?: string;
 }
 
 export const GIFT_COLLECTIONS: GiftCollection[] = [
     {
         id: 'huyen',
         name: 'Bộ sưu tập Huyền',
+        nameEn: 'Huyen Heritage Collection',
         shortName: 'Huyền',
+        shortNameEn: 'Huyen',
         description: 'Bộ sưu tập quà tặng Huyền - các set trà tuyển chọn, đóng gói sang trọng làm quà biếu.',
+        descriptionEn: 'Huyen Heritage Gift Collection - curated tea sets packaged luxuriously for premium gifting.',
     },
     {
         id: 'an',
         name: 'Bộ sưu tập An',
+        nameEn: 'An Peace Collection',
         shortName: 'An',
+        shortNameEn: 'An',
         description: 'Bộ sưu tập quà tặng An - đang cập nhật sản phẩm.',
+        descriptionEn: 'An Peace Gift Collection - serene and tranquil tea selections.',
     },
     {
         id: 'loc',
         name: 'Bộ sưu tập Lộc',
+        nameEn: 'Loc Prosperity Collection',
         shortName: 'Lộc',
+        shortNameEn: 'Loc',
         description: 'Bộ sưu tập quà tặng Lộc - đang cập nhật sản phẩm.',
+        descriptionEn: 'Loc Prosperity Gift Collection - auspicious gift sets bringing prosperity and fortune.',
     },
     {
         id: 'tinh',
         name: 'Bộ sưu tập Tĩnh',
+        nameEn: 'Tinh Serenity Collection',
         shortName: 'Tĩnh',
+        shortNameEn: 'Tinh',
         description: 'Bộ sưu tập quà tặng Tĩnh - các set trà tuyển chọn theo file khách gửi 29/10/2026.',
+        descriptionEn: 'Tinh Serenity Gift Collection - master-selected ancient teas for deep reflection and peace.',
     },
 ];
 
@@ -349,12 +399,14 @@ export function giftPackagingFromApiProduct(product: Product): GiftPackaging {
     return {
         apiId: product.id ?? 0,
         packaging: product.packagingName?.trim() || 'Set mix Lục Trà Shan 1 Tôm 1 Lá, Lục Trà Shan 1 Tôm 2 Lá, Hồng Trà Shan',
+        packagingEn: product.packagingNameEn?.trim() || null,
         price: Number(product.price ?? 0),
         gram: Number(product.quantity ?? 0),
         total: product.total ?? null,
         image: product.images ?? null,
         colors: parseColorOptions(product.colorOptions),
         description: product.description ?? '',
+        descriptionEn: product.descriptionEn ?? '',
     };
 }
 
@@ -364,6 +416,7 @@ export function giftFromApiProduct(product: Product): GiftProduct {
     return {
         slug: giftSlugForName(product.name),
         name: product.name ?? `Set quà #${product.id}`,
+        nameEn: product.nameEn?.trim() || null,
         collectionId: collectionIdForName(product.collectionName),
         priceMin: packaging.price,
         priceMax: packaging.price,
@@ -371,12 +424,16 @@ export function giftFromApiProduct(product: Product): GiftProduct {
         minGram: Number.isFinite(packaging.gram) && packaging.gram > 0 ? packaging.gram : null,
         maxGram: Number.isFinite(packaging.gram) && packaging.gram > 0 ? packaging.gram : null,
         packaging: packaging.packaging,
+        packagingEn: packaging.packagingEn ?? null,
         colors: packaging.colors,
         description: packaging.description,
+        descriptionEn: product.descriptionEn ?? null,
         image: packaging.image,
         apiId: product.id,
         userManual: product.userManual ?? null,
+        userManualEn: product.userManualEn ?? null,
         storageInstructions: product.storageInstructions ?? null,
+        storageInstructionsEn: product.storageInstructionsEn ?? null,
         packagings: [packaging],
     };
 }
@@ -406,14 +463,20 @@ export function groupGiftProducts(products: Product[]): GiftProduct[] {
             const cheapest = existing.packagings[0];
             existing.gram = cheapest.gram;
             existing.packaging = cheapest.packaging;
+            existing.packagingEn = cheapest.packagingEn;
             existing.colors = cheapest.colors;
             existing.image = cheapest.image ?? existing.image;
             existing.apiId = cheapest.apiId;
+            if (!existing.nameEn && product.nameEn) existing.nameEn = product.nameEn;
             if (!existing.description && packaging.description) existing.description = packaging.description;
+            if (!existing.descriptionEn && product.descriptionEn) existing.descriptionEn = product.descriptionEn;
+            if (!existing.userManualEn && product.userManualEn) existing.userManualEn = product.userManualEn;
+            if (!existing.storageInstructionsEn && product.storageInstructionsEn) existing.storageInstructionsEn = product.storageInstructionsEn;
         } else {
             byKey.set(key, {
                 slug: giftSlugForName(product.name),
                 name,
+                nameEn: product.nameEn?.trim() || null,
                 collectionId,
                 priceMin: packaging.price,
                 priceMax: packaging.price,
@@ -421,12 +484,16 @@ export function groupGiftProducts(products: Product[]): GiftProduct[] {
                 minGram: Number.isFinite(packaging.gram) && packaging.gram > 0 ? packaging.gram : null,
                 maxGram: Number.isFinite(packaging.gram) && packaging.gram > 0 ? packaging.gram : null,
                 packaging: packaging.packaging,
+                packagingEn: packaging.packagingEn ?? null,
                 colors: packaging.colors,
                 description: packaging.description,
+                descriptionEn: product.descriptionEn ?? null,
                 image: packaging.image,
                 apiId: product.id,
                 userManual: product.userManual ?? null,
+                userManualEn: product.userManualEn ?? null,
                 storageInstructions: product.storageInstructions ?? null,
+                storageInstructionsEn: product.storageInstructionsEn ?? null,
                 packagings: [packaging],
             });
         }

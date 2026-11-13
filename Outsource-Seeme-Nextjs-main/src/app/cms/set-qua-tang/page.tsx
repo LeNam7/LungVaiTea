@@ -47,14 +47,18 @@ const {Title} = Typography;
 interface GiftLine {
     key: string;
     name: string;
+    nameEn?: string | null;
     collectionId: string;
     options: Product[];
     minPrice: number;
     maxPrice: number;
     image: string | null;
     description: string | null;
+    descriptionEn?: string | null;
     userManual: string | null;
+    userManualEn?: string | null;
     storageInstructions: string | null;
+    storageInstructionsEn?: string | null;
 }
 
 function groupGiftLines(products: Product[]): GiftLine[] {
@@ -71,22 +75,31 @@ function groupGiftLines(products: Product[]): GiftLine[] {
             existing.minPrice = Math.min(existing.minPrice, price);
             existing.maxPrice = Math.max(existing.maxPrice, price);
             if (!existing.image && product.images) existing.image = product.images;
+            if (!existing.nameEn && product.nameEn) existing.nameEn = product.nameEn;
             if (!existing.description && product.description) existing.description = product.description;
+            if (!existing.descriptionEn && product.descriptionEn) existing.descriptionEn = product.descriptionEn;
             if (!existing.userManual && product.userManual) existing.userManual = product.userManual;
+            if (!existing.userManualEn && product.userManualEn) existing.userManualEn = product.userManualEn;
             if (!existing.storageInstructions && product.storageInstructions)
                 existing.storageInstructions = product.storageInstructions;
+            if (!existing.storageInstructionsEn && product.storageInstructionsEn)
+                existing.storageInstructionsEn = product.storageInstructionsEn;
         } else {
             byKey.set(key, {
                 key,
                 name,
+                nameEn: product.nameEn ?? null,
                 collectionId,
                 options: [product],
                 minPrice: price,
                 maxPrice: price,
                 image: product.images ?? null,
                 description: product.description ?? null,
+                descriptionEn: product.descriptionEn ?? null,
                 userManual: product.userManual ?? null,
+                userManualEn: product.userManualEn ?? null,
                 storageInstructions: product.storageInstructions ?? null,
+                storageInstructionsEn: product.storageInstructionsEn ?? null,
             });
         }
     }
@@ -225,10 +238,14 @@ export default function SetQuaTangPage() {
         setEditingLine(line);
         setForm.setFieldsValue({
             name: line.name,
+            nameEn: line.nameEn ?? '',
             collectionId: line.collectionId,
             description: line.description ?? '',
+            descriptionEn: line.descriptionEn ?? '',
             userManual: line.userManual ?? '',
+            userManualEn: line.userManualEn ?? '',
             storageInstructions: line.storageInstructions ?? '',
+            storageInstructionsEn: line.storageInstructionsEn ?? '',
             image: line.image ?? '',
         });
         setSetModalOpen(true);
@@ -244,10 +261,14 @@ export default function SetQuaTangPage() {
                     await updateProductAPI(option.id!, {
                         ...full,
                         name: values.name,
+                        nameEn: values.nameEn ?? '',
                         collectionName: collectionShortName(values.collectionId),
                         description: values.description ?? '',
+                        descriptionEn: values.descriptionEn ?? '',
                         userManual: values.userManual ?? '',
+                        userManualEn: values.userManualEn ?? '',
                         storageInstructions: values.storageInstructions ?? '',
+                        storageInstructionsEn: values.storageInstructionsEn ?? '',
                         images: values.image || '',
                     });
                 }
@@ -255,16 +276,21 @@ export default function SetQuaTangPage() {
             } else {
                 await createProductAPI({
                     name: values.name,
+                    nameEn: values.nameEn ?? '',
                     groupId: 'set-qua-tang',
                     price: Number(values.priceMin ?? 0),
                     total: 100,
                     description: values.description ?? '',
+                    descriptionEn: values.descriptionEn ?? '',
                     userManual: values.userManual ?? '',
+                    userManualEn: values.userManualEn ?? '',
                     storageInstructions: values.storageInstructions ?? '',
+                    storageInstructionsEn: values.storageInstructionsEn ?? '',
                     isActive: values.isActive ?? true,
                     images: values.image || '',
                     quantity: Number(values.gram ?? 60),
                     packagingName: values.packaging ?? '',
+                    packagingNameEn: values.packagingEn ?? '',
                     variantName: '',
                     isGiftSet: true,
                     collectionName: collectionShortName(values.collectionId),
@@ -596,8 +622,13 @@ export default function SetQuaTangPage() {
                 <Form form={setForm} layout="vertical" className="mt-4">
                     <Row gutter={16}>
                         <Col span={12}>
-                            <Form.Item name="name" label="Tên set quà" rules={[{required: true, message: 'Nhập tên set quà'}]}>
+                            <Form.Item name="name" label="Tên set quà (Tiếng Việt)" rules={[{required: true, message: 'Nhập tên set quà'}]}>
                                 <Input placeholder="Ví dụ: Huyền Nhất" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name="nameEn" label="Tên set quà (Tiếng Anh)">
+                                <Input placeholder="e.g. Huyen Nhat Gift Set" />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
@@ -646,27 +677,48 @@ export default function SetQuaTangPage() {
                                 </Form.Item>
                             </Col>
                         )}
-                        <Col span={24}>
-                            <Form.Item name="description" label="Mô tả" help={editingLine ? 'Mô tả này sẽ áp cho tất cả quy cách của set.' : undefined}>
+                        <Col span={12}>
+                            <Form.Item name="description" label="Mô tả (Tiếng Việt)" help={editingLine ? 'Mô tả này sẽ áp cho tất cả quy cách của set.' : undefined}>
                                 <Input.TextArea rows={3} placeholder="Mô tả set quà..." />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
+                            <Form.Item name="descriptionEn" label="Mô tả (Tiếng Anh)" help={editingLine ? 'English description for all variants.' : undefined}>
+                                <Input.TextArea rows={3} placeholder="Gift set description in English..." />
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}>
                             <Form.Item
                                 name="userManual"
-                                label="Hướng dẫn sử dụng"
+                                label="HD sử dụng (Tiếng Việt)"
                                 help="Hiện ở mục Hướng dẫn sử dụng ngoài trang chi tiết."
                             >
                                 <Input.TextArea rows={2} placeholder="Hướng dẫn sử dụng..." />
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
+                        <Col span={6}>
+                            <Form.Item
+                                name="userManualEn"
+                                label="HD sử dụng (Tiếng Anh)"
+                            >
+                                <Input.TextArea rows={2} placeholder="Brewing instructions..." />
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}>
                             <Form.Item
                                 name="storageInstructions"
-                                label="Hướng dẫn bảo quản"
+                                label="HD bảo quản (Tiếng Việt)"
                                 help="Hiện ở mục Hướng dẫn bảo quản ngoài trang chi tiết."
                             >
                                 <Input.TextArea rows={2} placeholder="Hướng dẫn bảo quản..." />
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}>
+                            <Form.Item
+                                name="storageInstructionsEn"
+                                label="HD bảo quản (Tiếng Anh)"
+                            >
+                                <Input.TextArea rows={2} placeholder="Storage instructions..." />
                             </Form.Item>
                         </Col>
                     </Row>

@@ -53,6 +53,7 @@ interface VariantDraft {
     id?: number;
     /** Tên phân loại duy nhất trong bảng (hiển thị ngoài trang bán; dữ liệu thật đang nằm ở packagingName). */
     name: string;
+    nameEn?: string;
     quantity: number;
     price: number;
     total: number;
@@ -63,6 +64,7 @@ interface VariantDraft {
 const emptyDraft = (): VariantDraft => ({
     key: `new-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     name: '',
+    nameEn: '',
     quantity: 0,
     price: 0,
     total: 0,
@@ -74,6 +76,7 @@ const draftOf = (v: Product): VariantDraft => ({
     key: `id-${v.id}`,
     id: v.id,
     name: v.packagingName?.trim() || v.variantName?.trim() || '',
+    nameEn: v.packagingNameEn?.trim() || v.variantNameEn?.trim() || '',
     quantity: Number(v.quantity ?? 0),
     price: Number(v.price ?? 0),
     total: Number(v.total ?? 0),
@@ -85,6 +88,7 @@ const draftOf = (v: Product): VariantDraft => ({
 interface ProductLineRow {
     key: string;
     name: string;
+    nameEn?: string | null;
     groupId: string | null;
     groupName: string;
     variants: Product[];
@@ -92,8 +96,11 @@ interface ProductLineRow {
     maxPrice: number;
     image: string | null;
     description: string | null;
+    descriptionEn?: string | null;
     userManual: string | null;
+    userManualEn?: string | null;
     storageInstructions: string | null;
+    storageInstructionsEn?: string | null;
 }
 
 function groupTeaLines(products: Product[], groups: TeaGroup[]): ProductLineRow[] {
@@ -110,14 +117,20 @@ function groupTeaLines(products: Product[], groups: TeaGroup[]): ProductLineRow[
             existing.minPrice = Math.min(existing.minPrice, price);
             existing.maxPrice = Math.max(existing.maxPrice, price);
             if (!existing.image && product.images) existing.image = product.images;
+            if (!existing.nameEn && product.nameEn) existing.nameEn = product.nameEn;
             if (!existing.description && product.description) existing.description = product.description;
+            if (!existing.descriptionEn && product.descriptionEn) existing.descriptionEn = product.descriptionEn;
             if (!existing.userManual && product.userManual) existing.userManual = product.userManual;
+            if (!existing.userManualEn && product.userManualEn) existing.userManualEn = product.userManualEn;
             if (!existing.storageInstructions && product.storageInstructions)
                 existing.storageInstructions = product.storageInstructions;
+            if (!existing.storageInstructionsEn && product.storageInstructionsEn)
+                existing.storageInstructionsEn = product.storageInstructionsEn;
         } else {
             byKey.set(key, {
                 key,
                 name,
+                nameEn: product.nameEn ?? null,
                 groupId,
                 groupName: groups.find((g) => g.id === groupId)?.name ?? 'Chưa phân nhóm',
                 variants: [product],
@@ -125,8 +138,11 @@ function groupTeaLines(products: Product[], groups: TeaGroup[]): ProductLineRow[
                 maxPrice: price,
                 image: product.images ?? null,
                 description: product.description ?? null,
+                descriptionEn: product.descriptionEn ?? null,
                 userManual: product.userManual ?? null,
+                userManualEn: product.userManualEn ?? null,
                 storageInstructions: product.storageInstructions ?? null,
+                storageInstructionsEn: product.storageInstructionsEn ?? null,
             });
         }
     }
@@ -223,10 +239,14 @@ export default function SanPhamPage() {
         setEditingLine(line);
         lineForm.setFieldsValue({
             name: line.name,
+            nameEn: line.nameEn ?? '',
             groupId: line.groupId,
             description: line.description ?? '',
+            descriptionEn: line.descriptionEn ?? '',
             userManual: line.userManual ?? '',
+            userManualEn: line.userManualEn ?? '',
             storageInstructions: line.storageInstructions ?? '',
+            storageInstructionsEn: line.storageInstructionsEn ?? '',
         });
         setDraftVariants(line.variants.map(draftOf));
         setLineModalOpen(true);
@@ -259,16 +279,20 @@ export default function SanPhamPage() {
                         await updateProductAPI(d.id, {
                             ...full,
                             name: values.name,
+                            nameEn: values.nameEn ?? '',
                             groupId: values.groupId,
                             description: values.description ?? '',
+                            descriptionEn: values.descriptionEn ?? '',
                             userManual: values.userManual ?? '',
+                            userManualEn: values.userManualEn ?? '',
                             storageInstructions: values.storageInstructions ?? '',
+                            storageInstructionsEn: values.storageInstructionsEn ?? '',
                             price: d.price,
                             quantity: d.quantity,
-                            // 1 cột tên duy nhất: ghi vào packagingName (trường trang bán đang dùng),
-                            // xoá variantName để nhãn ngoài trang bán không bị lặp "Tên - Tên".
                             packagingName: d.name,
+                            packagingNameEn: d.nameEn ?? '',
                             variantName: '',
+                            variantNameEn: '',
                             total: d.total,
                             isActive: d.isActive,
                             images: d.images,
@@ -276,15 +300,21 @@ export default function SanPhamPage() {
                     } else {
                         await createProductAPI({
                             name: values.name,
+                            nameEn: values.nameEn ?? '',
                             groupId: values.groupId,
                             price: d.price,
                             quantity: d.quantity,
                             packagingName: d.name,
+                            packagingNameEn: d.nameEn ?? '',
                             variantName: '',
+                            variantNameEn: '',
                             total: d.total,
                             description: values.description ?? '',
+                            descriptionEn: values.descriptionEn ?? '',
                             userManual: values.userManual ?? '',
+                            userManualEn: values.userManualEn ?? '',
                             storageInstructions: values.storageInstructions ?? '',
+                            storageInstructionsEn: values.storageInstructionsEn ?? '',
                             isActive: d.isActive,
                             images: d.images,
                             isGiftSet: false,
@@ -296,15 +326,21 @@ export default function SanPhamPage() {
                 for (const d of draftVariants) {
                     await createProductAPI({
                         name: values.name,
+                        nameEn: values.nameEn ?? '',
                         groupId: values.groupId,
                         price: d.price,
                         quantity: d.quantity,
                         packagingName: d.name,
+                        packagingNameEn: d.nameEn ?? '',
                         variantName: '',
+                        variantNameEn: '',
                         total: d.total,
                         description: values.description ?? '',
+                        descriptionEn: values.descriptionEn ?? '',
                         userManual: values.userManual ?? '',
+                        userManualEn: values.userManualEn ?? '',
                         storageInstructions: values.storageInstructions ?? '',
+                        storageInstructionsEn: values.storageInstructionsEn ?? '',
                         isActive: d.isActive,
                         images: d.images,
                         isGiftSet: false,
@@ -584,9 +620,14 @@ export default function SanPhamPage() {
             >
                 <Form form={lineForm} layout="vertical" className="mt-4">
                     <Row gutter={16}>
-                        <Col span={16}>
-                            <Form.Item name="name" label="Tên sản phẩm" rules={[{required: true, message: 'Nhập tên sản phẩm'}]}>
+                        <Col span={8}>
+                            <Form.Item name="name" label="Tên sản phẩm (Tiếng Việt)" rules={[{required: true, message: 'Nhập tên sản phẩm'}]}>
                                 <Input placeholder="Tên sản phẩm..." />
+                            </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                            <Form.Item name="nameEn" label="Tên sản phẩm (Tiếng Anh)">
+                                <Input placeholder="Product name in English..." />
                             </Form.Item>
                         </Col>
                         <Col span={8}>
@@ -599,27 +640,48 @@ export default function SanPhamPage() {
                                 />
                             </Form.Item>
                         </Col>
-                        <Col span={24}>
-                            <Form.Item name="description" label="Mô tả" help="Mô tả này sẽ áp cho tất cả phân loại của sản phẩm.">
+                        <Col span={12}>
+                            <Form.Item name="description" label="Mô tả (Tiếng Việt)" help="Mô tả này sẽ áp cho tất cả phân loại của sản phẩm.">
                                 <Input.TextArea rows={3} placeholder="Mô tả sản phẩm..." />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
+                            <Form.Item name="descriptionEn" label="Mô tả (Tiếng Anh)" help="English description for all variants.">
+                                <Input.TextArea rows={3} placeholder="Product description in English..." />
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}>
                             <Form.Item
                                 name="userManual"
-                                label="Hướng dẫn sử dụng"
+                                label="HD sử dụng (Tiếng Việt)"
                                 help="Hiện ở mục Hướng dẫn sử dụng ngoài trang chi tiết."
                             >
                                 <Input.TextArea rows={2} placeholder="Hướng dẫn sử dụng..." />
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
+                        <Col span={6}>
+                            <Form.Item
+                                name="userManualEn"
+                                label="HD sử dụng (Tiếng Anh)"
+                            >
+                                <Input.TextArea rows={2} placeholder="Brewing instructions..." />
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}>
                             <Form.Item
                                 name="storageInstructions"
-                                label="Hướng dẫn bảo quản"
+                                label="HD bảo quản (Tiếng Việt)"
                                 help="Hiện ở mục Hướng dẫn bảo quản ngoài trang chi tiết."
                             >
                                 <Input.TextArea rows={2} placeholder="Hướng dẫn bảo quản..." />
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}>
+                            <Form.Item
+                                name="storageInstructionsEn"
+                                label="HD bảo quản (Tiếng Anh)"
+                            >
+                                <Input.TextArea rows={2} placeholder="Storage instructions..." />
                             </Form.Item>
                         </Col>
                     </Row>
@@ -646,14 +708,26 @@ export default function SanPhamPage() {
                             ),
                         },
                         {
-                            title: 'Tên biến thể',
+                            title: 'Tên biến thể (Tiếng Việt)',
                             key: 'name',
-                            width: 190,
+                            width: 170,
                             render: (_, r) => (
                                 <Input
                                     value={r.name}
-                                    placeholder="Ví dụ: Hộp Lập Thiếc vuông"
+                                    placeholder="Ví dụ: Hộp Thiếc vuông"
                                     onChange={(e) => updateDraft(r.key, {name: e.target.value})}
+                                />
+                            ),
+                        },
+                        {
+                            title: 'Tên biến thể (Tiếng Anh)',
+                            key: 'nameEn',
+                            width: 170,
+                            render: (_, r) => (
+                                <Input
+                                    value={r.nameEn}
+                                    placeholder="e.g. Square Tin Box"
+                                    onChange={(e) => updateDraft(r.key, {nameEn: e.target.value})}
                                 />
                             ),
                         },

@@ -711,8 +711,8 @@ const HeaderClient = () => {
     return (
         <>
             {/* ── Header ── */}
-            <div className="fixed top-0 left-0 right-0 z-40 bg-[#ddd1b9] font-semibold">
-                <div className="mx-auto flex h-[60px] w-full max-w-[1440px] items-center justify-between px-4 py-2 sm:px-6 lg:h-auto lg:px-[50px] lg:py-[14px]">
+            <div className="fixed top-0 left-0 right-0 z-40 bg-[#ddd1b9] font-semibold border-b border-[#3B5518]/10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+                <div className="mx-auto flex h-[60px] w-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:h-[70px] lg:px-6 xl:px-8 2xl:px-[50px]">
                 <Link
                     href={locale === 'en' ? '/en' : '/'}
                     aria-label={`${BRAND.name} - ${t('nav.home', 'Trang chủ')}`}
@@ -728,28 +728,27 @@ const HeaderClient = () => {
                         width={180}
                         height={40}
                         priority
-                        className="h-[36px] w-auto object-contain lg:h-[40px]"
+                        className="h-[34px] w-auto object-contain lg:h-[36px] xl:h-[40px]"
                     />
                 </Link>
                 {/* Desktop nav: 3 khối logo / menu / nút phải dàn đều bằng
                     justify-between của container - menu nằm giữa logo và
                     cụm nút (đúng vị trí Figma), cụm nút sát mép phải. */}
-                <div className="hidden items-center justify-center lg:flex">
-                    <div className="flex items-center justify-center gap-9">
+                <div className="hidden shrink-0 items-center justify-center lg:flex">
+                    <div className="flex items-center justify-center gap-3.5 xl:gap-6 2xl:gap-8">
                         {MENUSCONST.map((menu, index) => {
                             const active = isMenuActive(menu.path);
                             if (menu.path === '/san-pham-tra') {
                                 return (
                                     <div
                                         key={index}
-                                        className="relative"
                                         onMouseEnter={openMegaMenu}
                                         onMouseLeave={scheduleCloseMegaMenu}
                                     >
                                         <Link
                                             href={localizePath(menu.path)}
                                             onClick={(e) => handleMenuClick(e, menu.path)}
-                                            className={`nav-link cursor-pointer text-sm transition-colors duration-200 ${active
+                                            className={`nav-link cursor-pointer text-xs xl:text-sm whitespace-nowrap transition-colors duration-200 ${active
                                                 ? 'text-[#3b5518] font-semibold nav-link-active'
                                                 : 'text-[#3b5518] font-normal'
                                                 }`}
@@ -764,7 +763,7 @@ const HeaderClient = () => {
                                 <Link
                                     href={localizePath(menu.path)}
                                     onClick={(e) => handleMenuClick(e, menu.path)}
-                                    className={`nav-link cursor-pointer text-sm transition-colors duration-200 ${active
+                                    className={`nav-link cursor-pointer text-xs xl:text-sm whitespace-nowrap transition-colors duration-200 ${active
                                         ? 'text-[#3b5518] font-semibold nav-link-active'
                                         : 'text-[#3b5518] font-normal'
                                         }`}
@@ -777,24 +776,24 @@ const HeaderClient = () => {
                     </div>
                 </div>
                 {/* Cụm nút phải desktop: tìm kiếm + tài khoản + giỏ, sát mép phải */}
-                <div className="hidden shrink-0 items-center gap-5 lg:flex">
+                <div className="hidden shrink-0 items-center gap-2 lg:flex xl:gap-3 2xl:gap-4">
                     <button
                         type="button"
                         onClick={() => setSearchOpen((v) => !v)}
                         aria-label="Tìm kiếm sản phẩm trà"
-                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition hover:bg-[#3B5518]/10"
+                        className="flex h-8 w-8 xl:h-9 xl:w-9 cursor-pointer items-center justify-center rounded-full transition hover:bg-[#3B5518]/10"
                     >
                         <SearchIcon />
                     </button>
-                    <div className="flex items-center justify-center gap-5">
+                    <div className="flex items-center justify-center gap-2 xl:gap-3 2xl:gap-4">
                         {user ? (
-                            <div className="flex items-center gap-3">
-                                <span className="text-[#3B5518] text-sm font-normal">
-                                    {t('auth.hello', 'Xin chào')}, {user.firstName || user.userName || 'Bạn'}
+                            <div className="flex items-center gap-2 xl:gap-2.5">
+                                <span className="text-[#3B5518] text-xs xl:text-sm font-normal max-w-[85px] xl:max-w-[130px] truncate" title={user.firstName || user.userName || 'Khách'}>
+                                    {t('auth.hello', 'Xin chào')}, {user.firstName || user.userName || 'Khách'}
                                 </span>
                                 <button
                                     onClick={() => dispatch(logout())}
-                                    className="bg-transparent border border-[#3B5518] text-[#3B5518] text-sm px-4 py-1.5 rounded-full font-medium transition hover:bg-[#3B5518]/10 cursor-pointer"
+                                    className="bg-transparent border border-[#3B5518] text-[#3B5518] text-xs px-2.5 py-1 xl:px-3.5 xl:py-1 rounded-full font-medium transition hover:bg-[#3B5518]/10 cursor-pointer whitespace-nowrap"
                                 >
                                     {t('auth.logout', 'Đăng xuất')}
                                 </button>
@@ -803,13 +802,13 @@ const HeaderClient = () => {
                             <>
                                 <button
                                     onClick={() => openModal('register')}
-                                    className="bg-transparent border border-[#3B5518] text-[#3B5518] text-sm px-5 py-1.5 rounded-full font-medium transition hover:bg-[#3B5518]/10 cursor-pointer"
+                                    className="bg-transparent border border-[#3B5518] text-[#3B5518] text-xs px-3 py-1 xl:px-4 xl:py-1.5 rounded-full font-medium transition hover:bg-[#3B5518]/10 cursor-pointer whitespace-nowrap"
                                 >
                                     {t('nav.register', 'Đăng ký')}
                                 </button>
                                 <button
                                     onClick={() => openModal('login')}
-                                    className="bg-[#3B5518] border border-[#3B5518] text-[#DED1B9] text-sm px-5 py-1.5 rounded-full font-medium transition hover:bg-[#4A6720] cursor-pointer"
+                                    className="bg-[#3B5518] border border-[#3B5518] text-[#DED1B9] text-xs px-3 py-1 xl:px-4 xl:py-1.5 rounded-full font-medium transition hover:bg-[#4A6720] cursor-pointer whitespace-nowrap"
                                 >
                                     {t('nav.login', 'Đăng nhập')}
                                 </button>
@@ -819,21 +818,23 @@ const HeaderClient = () => {
                             <Link
                                 href={localizePath('/thong-tin-tai-khoan?tab=yeu-thich')}
                                 aria-label="Sản phẩm yêu thích"
-                                className="cursor-pointer"
+                                className="cursor-pointer shrink-0"
                             >
                                 <HeartIcon />
                             </Link>
                         )}
                         {user && (
-                            <Link href={localizePath('/thong-tin-tai-khoan')}>
+                            <Link href={localizePath('/thong-tin-tai-khoan')} className="shrink-0">
                                 <UserIcon />
                             </Link>
                         )}
-                        <LanguageSwitcher />
+                        <div className="shrink-0">
+                            <LanguageSwitcher />
+                        </div>
                         <Link
                             href={localizePath('/gio-hang')}
                             aria-label="Giỏ hàng"
-                            className="relative"
+                            className="relative shrink-0"
                         >
                             <CartIcon />
                             {totalCount > 0 && (
@@ -848,7 +849,7 @@ const HeaderClient = () => {
                             href="https://tea.anf-technology.com/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-full bg-[#3B5518] px-3.5 py-1.5 text-xs font-semibold text-[#DED1B9] shadow-sm transition hover:bg-[#4A6720] hover:text-white shrink-0 cursor-pointer"
+                            className="inline-flex items-center gap-1 rounded-full bg-[#3B5518] px-2.5 py-1 text-xs font-semibold text-[#DED1B9] shadow-sm transition hover:bg-[#4A6720] hover:text-white shrink-0 cursor-pointer xl:gap-1.5 xl:px-3.5 xl:py-1.5 whitespace-nowrap"
                         >
                             <span>{t('nav.bookTeaRoom', 'Đặt phòng trà')}</span>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

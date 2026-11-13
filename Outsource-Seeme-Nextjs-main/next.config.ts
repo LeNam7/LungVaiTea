@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // output: "standalone", // Dùng khi build Docker container
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**" },

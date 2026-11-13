@@ -13,7 +13,9 @@ namespace Seeme.Domain.Entities
     {
         public string Slug { get; set; } = string.Empty; // Khóa nghiệp vụ, unique: luc-tra / hong-tra / bach-tra / pho-nhi-song / set-qua-tang
         public string Name { get; set; } = string.Empty; // Tên nhóm trà
+        public string? NameEn { get; set; } // Tên tiếng Anh
         public string? Description { get; set; } // Mô tả nhóm trà hiển thị ở mega menu
+        public string? DescriptionEn { get; set; } // Mô tả tiếng Anh
         public string? ImageUrl { get; set; } // Ảnh đại diện nhóm trà
         public int SortOrder { get; set; } = 0; // Thứ tự hiển thị
         public bool IsActive { get; set; } = true; // Trạng thái hiển thị

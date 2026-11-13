@@ -10,12 +10,14 @@ namespace Seeme.Domain.Entities
     public class Tea : BaseEntity
     {
         public string Name { get; set; } = string.Empty; // Tên cây trà
+        public string? NameEn { get; set; } // Tên cây trà tiếng Anh
         public string CategoryIds { get; set; } // Phân loại
         public int Price { get; set; }
         // Mã vườn
         public int GardenId { get; set; }
         public int YearOld { get; set; }
         public string? Description { get; set; } = string.Empty;
+        public string? DescriptionEn { get; set; } // Mô tả tiếng Anh
         public decimal Long { get; set; } // Kinh độ
         public decimal Lat { get; set; } // Vĩ độ
         public string Aspect { get; set; } = string.Empty; // Tình trạng cây trà (ví dụ: khỏe mạnh, bị sâu bệnh, v.v.)
@@ -28,5 +30,6 @@ namespace Seeme.Domain.Entities
         public string? Images { get; set; } // Ảnh cây trà
         public decimal Volume { get; set; } // Sản lượng
         public string? Type { get; set; } = string.Empty; // Loại cây 1 lá, 2 lá
+        public string? TypeEn { get; set; } // Loại cây tiếng Anh
     }
 }

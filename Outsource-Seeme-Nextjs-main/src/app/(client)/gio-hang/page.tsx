@@ -16,6 +16,10 @@ import GenerateQRCode from '@/components/common/GenerateQRCode';
 import {useAppSelector} from '@/store/hooks';
 import {PROVINCES} from '@/constants/provinces';
 import {getCommunesByProvince, Commune} from '@/constants/communes';
+import {COUNTRIES, getCountryByCode} from '@/constants/countries';
+import {convertVndToUsd, formatUsd, formatVnd} from '@/utils/currency';
+import StripePaymentModal, {type StripeTransactionResult} from '@/components/payment/StripePaymentModal';
+import PayPalPaymentModal, {type PayPalTransactionResult} from '@/components/payment/PayPalPaymentModal';
 import {TrackingAction, TrackingType, type OrderProductDetailRequest, type OrderTeaDetailRequest, type Product} from '@/types/swagger.types';
 import {BRAND, BANK_INFO} from '@/constants/brand';
 import {getCookie} from '@/utils/cookie';
@@ -273,7 +277,8 @@ type SepaySocketPayload =
     | {type: 'transaction'; transaction: SepayTransactionPayload}
     | {type: 'payment-confirmed'; transaction: SepayTransactionPayload};
 
-type PaymentMethod = 'qr' | 'cod';
+type ShippingRegion = 'domestic' | 'international';
+type PaymentMethod = 'qr' | 'cod' | 'stripe' | 'paypal';
 
 const getTeaSeasonByName = (seasons: CartTeaSeason[], keyword: 'xuân') =>
     seasons.find((season) => season.label.toLocaleLowerCase('vi-VN').includes(keyword));
@@ -333,6 +338,7 @@ const buildProductOrderDetail = (item: CartProduct): OrderProductDetailRequest =
 
 export default function GioHangPage() {
     const { t, locale } = useLanguage();
+    const isEn = locale === 'en';
     const localizePath = (path: string) => locale === 'en' ? (path.startsWith('/en') ? path : `/en${path === '/' ? '' : path}`) : path;
     const [submitting, setSubmitting] = React.useState(false);
     const [showQR, setShowQR] = React.useState(false);
@@ -368,6 +374,10 @@ export default function GioHangPage() {
     const [productOpen, setProductOpen] = React.useState(true);
 
     /* Form state */
+    const [shippingRegion, setShippingRegion] = React.useState<ShippingRegion>('domestic');
+    const [countryCode, setCountryCode] = React.useState('US');
+    const [stateCity, setStateCity] = React.useState('');
+    const [postalCode, setPostalCode] = React.useState('');
     const [fullName, setFullName] = React.useState('');
     const [phoneNumber, setPhoneNumber] = React.useState('');
     const [email, setEmail] = React.useState('');
@@ -383,6 +393,16 @@ export default function GioHangPage() {
     const [invoiceEmail, setInvoiceEmail] = React.useState('');
     const [invoiceAddress, setInvoiceAddress] = React.useState('');
     const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr');
+    const [showStripeModal, setShowStripeModal] = React.useState(false);
+    const [showPayPalModal, setShowPayPalModal] = React.useState(false);
+
+    /* Country options for international checkout */
+    const countryOptions = React.useMemo(() => {
+        return COUNTRIES.map((c) => ({
+            code: c.code,
+            name: `${c.flag} ${locale === 'en' ? c.nameEn : c.nameVi} (${c.dialCode})`,
+        }));
+    }, [locale]);
 
     /* Communes filtered by selected province */
     const [wards, setWards] = React.useState<Commune[]>([]);
@@ -434,7 +454,7 @@ export default function GioHangPage() {
     );
 
     const createOrder = React.useCallback(
-        async (transaction?: SepayTransactionPayload | null, contentOverride?: string) => {
+        async (transaction?: SepayTransactionPayload | StripeTransactionResult | PayPalTransactionResult | null, contentOverride?: string) => {
             if (paymentTimeoutRef.current) {
                 clearTimeout(paymentTimeoutRef.current);
                 paymentTimeoutRef.current = null;
@@ -442,13 +462,24 @@ export default function GioHangPage() {
             paymentCheckingRef.current = false;
             setSubmitting(true);
             setPaymentStatus('order-creating');
+
+            const isIntl = shippingRegion === 'international';
+            const selectedCountry = getCountryByCode(countryCode);
+
             const deliveryInfo = {
                 fullName,
                 phoneNumber,
                 email,
-                provinceName,
-                wardName,
-                address,
+                shippingRegion,
+                countryCode: isIntl ? countryCode : 'VN',
+                countryName: isIntl ? (locale === 'en' ? selectedCountry?.nameEn : selectedCountry?.nameVi) : 'Việt Nam',
+                stateCity: isIntl ? stateCity.trim() : '',
+                postalCode: isIntl ? postalCode.trim() : '',
+                provinceName: isIntl ? (stateCity.trim() || 'Quốc tế') : provinceName,
+                wardName: isIntl ? (selectedCountry?.nameVi || 'Quốc tế') : wardName,
+                address: isIntl
+                    ? `${address.trim()}${stateCity ? `, ${stateCity.trim()}` : ''}${postalCode ? `, ZIP: ${postalCode.trim()}` : ''}, ${selectedCountry?.nameVi ?? countryCode}`
+                    : address,
                 note,
                 companyInvoice: companyInvoice
                     ? {
@@ -459,21 +490,32 @@ export default function GioHangPage() {
                       }
                     : false,
                 paymentMethod,
-                paymentMethodName: paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng' : 'Quét mã QR để chuyển tiền',
+                paymentMethodName:
+                    paymentMethod === 'cod'
+                        ? 'Thanh toán khi nhận hàng'
+                        : paymentMethod === 'qr'
+                          ? 'Quét mã QR để chuyển tiền'
+                          : paymentMethod === 'stripe'
+                            ? 'Thanh toán thẻ quốc tế (Stripe)'
+                            : 'Thanh toán qua PayPal',
                 orderContent: contentOverride ?? orderContent,
                 totalAmount: total,
+                totalAmountUsd: convertVndToUsd(total),
+                paymentTransaction: transaction ?? null,
             };
             const orderDetails = [...teaItems.map(buildTeaOrderDetail), ...productItems.map(buildProductOrderDetail)];
             try {
                 await createOrderAPI({
                     deliveryInformation: JSON.stringify(deliveryInfo),
                     orderDetails,
-                    sepayTransaction: transaction ?? null,
+                    sepayTransaction: (paymentMethod === 'qr' ? transaction : null) as any,
                 });
                 setShowQR(false);
+                setShowStripeModal(false);
+                setShowPayPalModal(false);
                 clearCart();
-                setPaymentStatus(transaction ? 'paid' : 'manual-review');
-                setPaymentTransaction(transaction ?? null);
+                setPaymentStatus(transaction ? 'paid' : paymentMethod === 'cod' ? 'idle' : 'manual-review');
+                setPaymentTransaction((transaction as any) ?? null);
                 setOrderSuccess(paymentMethod === 'cod' ? 'cod' : transaction ? 'paid' : 'manual-review');
                 if (paymentMethod === 'cod') {
                     toast.success('Đặt hàng thành công! Bạn sẽ thanh toán khi nhận hàng.');
@@ -493,18 +535,23 @@ export default function GioHangPage() {
             address,
             clearCart,
             companyInvoice,
+            countryCode,
+            email,
+            fullName,
             invoiceAddress,
             invoiceCompanyName,
             invoiceEmail,
             invoiceTaxCode,
-            email,
-            fullName,
+            locale,
             note,
             orderContent,
             paymentMethod,
             phoneNumber,
+            postalCode,
             productItems,
             provinceName,
+            shippingRegion,
+            stateCity,
             teaItems,
             total,
             wardName,
@@ -518,44 +565,80 @@ export default function GioHangPage() {
             window.dispatchEvent(new CustomEvent('open-auth-modal'));
             return;
         }
+        const isIntl = shippingRegion === 'international';
         const normalizedName = fullName.trim();
         const normalizedPhone = phoneNumber.trim();
         const normalizedEmail = email.trim();
         const normalizedAddress = address.trim();
-        if (!normalizedName || !normalizedPhone || !provinceName || !wardName || !normalizedAddress) {
+
+        if (!normalizedName || !normalizedPhone || !normalizedAddress) {
             toast.warning('Vui lòng nhập đầy đủ họ tên, số điện thoại và địa chỉ giao hàng');
             return;
         }
-        if (!/^(0[35789])\d{8}$/.test(normalizedPhone)) {
-            toast.warning('Số điện thoại không hợp lệ');
-            return;
+
+        if (!isIntl) {
+            if (!provinceName || !wardName) {
+                toast.warning('Vui lòng chọn tỉnh/thành phố và phường/xã');
+                return;
+            }
+            if (!/^(0[35789])\d{8}$/.test(normalizedPhone)) {
+                toast.warning('Số điện thoại không hợp lệ (10 chữ số)');
+                return;
+            }
+            if (normalizedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+                toast.warning('Email không hợp lệ');
+                return;
+            }
+        } else {
+            if (!countryCode) {
+                toast.warning('Vui lòng chọn quốc gia nhận hàng');
+                return;
+            }
+            if (!stateCity.trim()) {
+                toast.warning('Vui lòng nhập bang, tỉnh hoặc thành phố quốc tế');
+                return;
+            }
+            if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+                toast.warning('Vui lòng nhập email hợp lệ để nhận thông báo và theo dõi đơn hàng quốc tế');
+                return;
+            }
+            if (!/^\+?[0-9\s\-\(\)\.]{7,20}$/.test(normalizedPhone)) {
+                toast.warning('Số điện thoại quốc tế không hợp lệ (Ví dụ: +1 234 567 8900)');
+                return;
+            }
+            if (paymentMethod === 'cod') {
+                toast.warning('Phương thức COD (nhận hàng trả tiền) chỉ áp dụng nội địa Việt Nam. Vui lòng chọn Thẻ quốc tế hoặc PayPal.');
+                return;
+            }
         }
-        if (normalizedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-            toast.warning('Email không hợp lệ');
-            return;
-        }
+
         if (companyInvoice) {
             if (!invoiceCompanyName.trim() || !invoiceTaxCode.trim() || !invoiceEmail.trim()) {
-                toast.warning('Vui lòng nhập đủ tên công ty, mã số thuế và email nhận hoá đơn');
+                toast.warning(
+                    isEn
+                        ? 'Please enter company name, tax code and invoice email'
+                        : 'Vui lòng nhập đủ tên công ty, mã số thuế và email nhận hoá đơn'
+                );
                 return;
             }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invoiceEmail.trim())) {
-                toast.warning('Email nhận hoá đơn không hợp lệ');
+                toast.warning(isEn ? 'Invalid invoice email address' : 'Email nhận hoá đơn không hợp lệ');
                 return;
             }
         }
         if (teaItems.some((tea) => getTeaCost(tea) === null)) {
-            toast.error('Có cây trà chưa có đơn giá hoặc sản lượng. Vui lòng cập nhật cây từ bộ sưu tập.');
+            toast.error(
+                isEn
+                    ? 'A tea tree in your cart lacks pricing or volume. Please update from the collection.'
+                    : 'Có cây trà chưa có đơn giá hoặc sản lượng. Vui lòng cập nhật cây từ bộ sưu tập.'
+            );
             return;
         }
         if (!teaItems.length && !productItems.length) {
-            toast.warning('Giỏ hàng đang trống');
+            toast.warning(isEn ? 'Your cart is empty' : 'Giỏ hàng đang trống');
             return;
         }
-        // Chặn thanh toán cho phân loại đã hết hàng (tồn kho = 0): đối chiếu tồn kho
-        // mới nhất từ API với từng dòng giỏ TRƯỚC khi hiện QR hay tạo đơn, vì hàng
-        // có thể hết sau khi khách đã thêm vào giỏ. Chỉ chặn dòng nào tra được và
-        // tồn kho <= 0; không tra được tồn kho thì không đặt đơn.
+
         try {
             const res = await getProductsPagingAPI({pageIndex: 1, pageSize: 100} as any);
             const products = unwrapPagingData<Product>(res).data;
@@ -569,6 +652,7 @@ export default function GioHangPage() {
             toast.error('Không kiểm tra được tồn kho, vui lòng thử lại sau');
             return;
         }
+
         const lastName = normalizedName.split(/\s+/).pop()?.toUpperCase() ?? '';
         const orderCode = Math.random().toString(36).slice(2, 4).toUpperCase();
         const nextOrderContent = `LVT ${lastName} ${normalizedPhone.slice(-4)} ${orderCode}`;
@@ -591,6 +675,16 @@ export default function GioHangPage() {
             return;
         }
 
+        if (paymentMethod === 'stripe') {
+            setShowStripeModal(true);
+            return;
+        }
+
+        if (paymentMethod === 'paypal') {
+            setShowPayPalModal(true);
+            return;
+        }
+
         setPaymentStatus('waiting');
         setShowQR(true);
     };
@@ -598,6 +692,22 @@ export default function GioHangPage() {
     const handlePaymentDone = React.useCallback(
         async (transaction?: SepayTransactionPayload | null) => {
             await createOrder(transaction);
+        },
+        [createOrder],
+    );
+
+    const handleStripeSuccess = React.useCallback(
+        async (transaction: StripeTransactionResult) => {
+            setShowStripeModal(false);
+            await createOrder(transaction as any);
+        },
+        [createOrder],
+    );
+
+    const handlePayPalSuccess = React.useCallback(
+        async (transaction: PayPalTransactionResult) => {
+            setShowPayPalModal(false);
+            await createOrder(transaction as any);
         },
         [createOrder],
     );
@@ -759,6 +869,27 @@ export default function GioHangPage() {
                 )}
             </AnimatePresence>
 
+            {/* Stripe International Card Modal */}
+            <StripePaymentModal
+                open={showStripeModal}
+                onClose={() => setShowStripeModal(false)}
+                totalAmountVnd={total}
+                orderContent={orderContent}
+                customerEmail={email}
+                customerName={fullName}
+                onSuccess={handleStripeSuccess}
+            />
+
+            {/* PayPal Modal */}
+            <PayPalPaymentModal
+                open={showPayPalModal}
+                onClose={() => setShowPayPalModal(false)}
+                totalAmountVnd={total}
+                orderContent={orderContent}
+                customerEmail={email}
+                onSuccess={handlePayPalSuccess}
+            />
+
             <AnimatePresence>
                 {orderSuccess && (
                     <motion.div
@@ -881,8 +1012,49 @@ export default function GioHangPage() {
 
                         {/* --- Form Fields --- */}
                         <div className="space-y-4">
+                            {/* Shipping Region Selector (Nội địa vs Quốc tế) */}
+                            <div>
+                                <label className="text-sm mb-1.5 block font-semibold text-[#3B5518]">
+                                    {t('cartPage.shippingRegion', 'Khu vực nhận hàng')}
+                                    <Req />
+                                </label>
+                                <div className="grid grid-cols-2 gap-2 p-1 bg-[#EEF2E4] rounded-xl border border-[#7F9635]/30">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShippingRegion('domestic');
+                                        }}
+                                        className={`py-2.5 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                                            shippingRegion === 'domestic'
+                                                ? 'bg-[#7F9635] text-white shadow-sm'
+                                                : 'text-[#3B5518] hover:bg-[#7F9635]/15'
+                                        }`}
+                                    >
+                                        <span>🇻🇳</span>
+                                        <span>{t('cartPage.domestic', 'Nội địa (Việt Nam)')}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShippingRegion('international');
+                                            if (paymentMethod === 'cod') {
+                                                setPaymentMethod('stripe');
+                                            }
+                                        }}
+                                        className={`py-2.5 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                                            shippingRegion === 'international'
+                                                ? 'bg-[#7F9635] text-white shadow-sm'
+                                                : 'text-[#3B5518] hover:bg-[#7F9635]/15'
+                                        }`}
+                                    >
+                                        <span>🌐</span>
+                                        <span>{t('cartPage.international', 'Quốc tế (Giao toàn cầu)')}</span>
+                                    </button>
+                                </div>
+                            </div>
+
                             {/* Name + Phone */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label htmlFor="checkout-full-name" className="text-sm mb-1.5 block">
                                         {t('cartPage.fullName', 'Họ và tên')}
@@ -900,7 +1072,7 @@ export default function GioHangPage() {
                                 </div>
                                 <div>
                                     <label htmlFor="checkout-phone" className="text-sm mb-1.5 block">
-                                        {t('cartPage.phone', 'Số điện thoại')}
+                                        {shippingRegion === 'international' ? t('cartPage.internationalPhone', 'Số điện thoại quốc tế') : t('cartPage.phone', 'Số điện thoại')}
                                         <Req />
                                     </label>
                                     <input
@@ -909,7 +1081,7 @@ export default function GioHangPage() {
                                         autoComplete="tel"
                                         inputMode="tel"
                                         className={inputCls}
-                                        placeholder={t('cartPage.enterPhone', 'Nhập số điện thoại')}
+                                        placeholder={shippingRegion === 'international' ? '+1 234 567 8900' : t('cartPage.enterPhone', 'Nhập số điện thoại')}
                                         value={phoneNumber}
                                         onChange={(e) => setPhoneNumber(e.target.value)}
                                     />
@@ -918,50 +1090,104 @@ export default function GioHangPage() {
 
                             {/* Email */}
                             <div>
-                                <label htmlFor="checkout-email" className="text-sm mb-1.5 block">Email</label>
+                                <label htmlFor="checkout-email" className="text-sm mb-1.5 block">
+                                    {t('cartPage.email', 'Email')}
+                                    {shippingRegion === 'international' && <Req />}
+                                </label>
                                 <input
                                     id="checkout-email"
                                     name="email"
                                     autoComplete="email"
                                     type="email"
                                     className={inputCls}
-                                    placeholder="Email"
+                                    placeholder={shippingRegion === 'international' ? 'customer@example.com' : t('cartPage.emailOptional', 'Email (không bắt buộc)')}
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
+                                {shippingRegion === 'international' && (
+                                    <p className="text-[11px] text-[#3B5518]/70 mt-1">
+                                        {t('cartPage.emailNotice', 'Email bắt buộc để gửi mã vận đơn quốc tế và xác nhận thanh toán.')}
+                                    </p>
+                                )}
                             </div>
 
-                            {/* Province / Ward (no district) */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-sm mb-1.5 block">
-                                        {t('cartPage.province', 'Tỉnh/thành phố')}
-                                        <Req />
-                                    </label>
-                                    <SearchableSelect
-                                        options={PROVINCES}
-                                        value={provinceCode}
-                                        placeholder={t('cartPage.selectProvince', 'Chọn tỉnh/thành phố')}
-                                        onChange={handleProvinceChange}
-                                    />
+                            {/* Location Section */}
+                            {shippingRegion === 'domestic' ? (
+                                /* DOMESTIC: Province / Ward (no district) */
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-sm mb-1.5 block">
+                                            {t('cartPage.province', 'Tỉnh/thành phố')}
+                                            <Req />
+                                        </label>
+                                        <SearchableSelect
+                                            options={PROVINCES}
+                                            value={provinceCode}
+                                            placeholder={t('cartPage.selectProvince', 'Chọn tỉnh/thành phố')}
+                                            onChange={handleProvinceChange}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm mb-1.5 block">
+                                            {t('cartPage.ward', 'Phường/xã')}
+                                            <Req />
+                                        </label>
+                                        <SearchableSelect
+                                            options={wards}
+                                            value={wardCode}
+                                            placeholder={!provinceCode ? t('cartPage.selectProvinceFirst', 'Chọn tỉnh trước') : t('cartPage.selectWard', 'Chọn phường/xã')}
+                                            disabled={!provinceCode}
+                                            onChange={(code, name) => {
+                                                setWardCode(code);
+                                                setWardName(name);
+                                            }}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="text-sm mb-1.5 block">
-                                        {t('cartPage.ward', 'Phường/xã')}
-                                        <Req />
-                                    </label>
-                                    <SearchableSelect
-                                        options={wards}
-                                        value={wardCode}
-                                        placeholder={!provinceCode ? t('cartPage.selectProvinceFirst', 'Chọn tỉnh trước') : t('cartPage.selectWard', 'Chọn phường/xã')}
-                                        disabled={!provinceCode}
-                                        onChange={(code, name) => {
-                                            setWardCode(code);
-                                            setWardName(name);
-                                        }}
-                                    />
+                            ) : (
+                                /* INTERNATIONAL: Country + State/City + Postal Code */
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-sm mb-1.5 block">
+                                            {t('cartPage.country', 'Quốc gia / Vùng lãnh thổ')}
+                                            <Req />
+                                        </label>
+                                        <SearchableSelect
+                                            options={countryOptions}
+                                            value={countryCode}
+                                            placeholder={t('cartPage.selectCountry', 'Chọn quốc gia')}
+                                            onChange={(code) => setCountryCode(code)}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label htmlFor="checkout-state-city" className="text-sm mb-1.5 block">
+                                                {t('cartPage.stateCity', 'Bang / Tỉnh / Thành phố')}
+                                                <Req />
+                                            </label>
+                                            <input
+                                                id="checkout-state-city"
+                                                className={inputCls}
+                                                placeholder={t('cartPage.enterStateCity', 'Nhập bang, tỉnh hoặc thành phố')}
+                                                value={stateCity}
+                                                onChange={(e) => setStateCity(e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="checkout-postal-code" className="text-sm mb-1.5 block">
+                                                {t('cartPage.postalCode', 'Mã bưu chính (ZIP / Postal Code)')}
+                                            </label>
+                                            <input
+                                                id="checkout-postal-code"
+                                                className={inputCls}
+                                                placeholder={t('cartPage.enterPostalCode', 'Nhập mã bưu chính (VD: 10001)')}
+                                                value={postalCode}
+                                                onChange={(e) => setPostalCode(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Address */}
                             <div>
@@ -974,7 +1200,7 @@ export default function GioHangPage() {
                                     name="address"
                                     autoComplete="street-address"
                                     className={inputCls}
-                                    placeholder={t('cartPage.addressPlaceholder', 'Số nhà, tên đường...')}
+                                    placeholder={shippingRegion === 'international' ? 'Street address, Apartment, Suite, Unit, etc.' : t('cartPage.addressPlaceholder', 'Số nhà, tên đường...')}
                                     value={address}
                                     onChange={(e) => setAddress(e.target.value)}
                                 />
@@ -987,7 +1213,7 @@ export default function GioHangPage() {
                                     id="checkout-note"
                                     name="note"
                                     className="w-full px-5 py-3 rounded-xl bg-[#EEF2E4] text-[#3B5518] placeholder-gray-400 outline-none text-sm resize-none focus:ring-2 focus:ring-[#7F9635]/50"
-                                    rows={4}
+                                    rows={3}
                                     placeholder={t('cartPage.notePlaceholder', 'Lời nhắn')}
                                     value={note}
                                     onChange={(e) => setNote(e.target.value)}
@@ -1002,46 +1228,54 @@ export default function GioHangPage() {
                                     onChange={(event) => setCompanyInvoice(event.target.checked)}
                                     className="h-5 w-5 accent-[#3B5518]"
                                 />
-                                <span className="text-sm">Xuất hóa đơn công ty</span>
+                                <span className="text-sm">{t('cartPage.companyInvoice', 'Xuất hóa đơn công ty')}</span>
                             </label>
                             {companyInvoice && (
                                 <div className="mt-3 grid grid-cols-1 gap-3 rounded-xl border border-[#7F9635]/25 bg-[#EEF2E4]/60 p-4 sm:grid-cols-2">
                                     <div>
-                                        <label htmlFor="invoice-company-name" className="text-sm mb-1.5 block">Tên công ty *</label>
+                                        <label htmlFor="invoice-company-name" className="text-sm mb-1.5 block">
+                                            {t('cartPage.companyName', 'Tên công ty')} *
+                                        </label>
                                         <input
                                             id="invoice-company-name"
                                             className="w-full px-4 py-2.5 rounded-xl bg-[#EEF2E4] text-[#3B5518] placeholder-gray-400 outline-none text-sm focus:ring-2 focus:ring-[#7F9635]/50"
-                                            placeholder="Tên công ty"
+                                            placeholder={t('cartPage.companyName', 'Tên công ty')}
                                             value={invoiceCompanyName}
                                             onChange={(e) => setInvoiceCompanyName(e.target.value)}
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="invoice-tax-code" className="text-sm mb-1.5 block">Mã số thuế *</label>
+                                        <label htmlFor="invoice-tax-code" className="text-sm mb-1.5 block">
+                                            {t('cartPage.taxCode', 'Mã số thuế')} *
+                                        </label>
                                         <input
                                             id="invoice-tax-code"
                                             className="w-full px-4 py-2.5 rounded-xl bg-[#EEF2E4] text-[#3B5518] placeholder-gray-400 outline-none text-sm focus:ring-2 focus:ring-[#7F9635]/50"
-                                            placeholder="Mã số thuế"
+                                            placeholder={t('cartPage.taxCode', 'Mã số thuế')}
                                             value={invoiceTaxCode}
                                             onChange={(e) => setInvoiceTaxCode(e.target.value)}
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="invoice-email" className="text-sm mb-1.5 block">Email nhận hoá đơn *</label>
+                                        <label htmlFor="invoice-email" className="text-sm mb-1.5 block">
+                                            {t('cartPage.invoiceEmail', 'Email nhận hoá đơn')} *
+                                        </label>
                                         <input
                                             id="invoice-email"
                                             className="w-full px-4 py-2.5 rounded-xl bg-[#EEF2E4] text-[#3B5518] placeholder-gray-400 outline-none text-sm focus:ring-2 focus:ring-[#7F9635]/50"
-                                            placeholder="email@congty.vn"
+                                            placeholder={isEn ? "email@company.com" : "email@congty.vn"}
                                             value={invoiceEmail}
                                             onChange={(e) => setInvoiceEmail(e.target.value)}
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="invoice-address" className="text-sm mb-1.5 block">Địa chỉ công ty</label>
+                                        <label htmlFor="invoice-address" className="text-sm mb-1.5 block">
+                                            {t('cartPage.companyAddress', 'Địa chỉ công ty')}
+                                        </label>
                                         <input
                                             id="invoice-address"
                                             className="w-full px-4 py-2.5 rounded-xl bg-[#EEF2E4] text-[#3B5518] placeholder-gray-400 outline-none text-sm focus:ring-2 focus:ring-[#7F9635]/50"
-                                            placeholder="Địa chỉ công ty"
+                                            placeholder={t('cartPage.companyAddress', 'Địa chỉ công ty')}
                                             value={invoiceAddress}
                                             onChange={(e) => setInvoiceAddress(e.target.value)}
                                         />
@@ -1055,46 +1289,127 @@ export default function GioHangPage() {
                             <h3 className="font-source-serif-4 text-2xl lg:text-3xl text-[#7F9635]">
                                 {t('cartPage.paymentMethod', 'Phương thức thanh toán')}
                             </h3>
-                            <label
-                                className={`flex items-start gap-3 mt-4 p-4 rounded-xl cursor-pointer border transition-colors ${
-                                    paymentMethod === 'qr' ? 'border-[#7F9635]/60 bg-[#DCE7C4]' : 'border-[#7F9635]/25'
-                                }`}
-                            >
-                                <input
-                                    type="radio"
-                                    name="paymentMethod"
-                                    value="qr"
-                                    checked={paymentMethod === 'qr'}
-                                    onChange={() => setPaymentMethod('qr')}
-                                    className="mt-1 h-5 w-5 shrink-0 accent-[#7F9635]"
-                                />
-                                <div>
-                                    <p className="font-semibold text-sm">{t('cartPage.qrTitle', 'Quét mã QR để chuyển tiền')}</p>
-                                    <p className="text-xs opacity-60 mt-0.5">
-                                        {t('cartPage.qrDesc', 'Hỗ trợ hầu hết các ngân hàng và ví điện tử tại Việt Nam.')}
-                                    </p>
-                                </div>
-                            </label>
-                            <label
-                                className={`flex items-start gap-3 mt-3 p-4 rounded-xl cursor-pointer border transition-colors ${
-                                    paymentMethod === 'cod' ? 'border-[#7F9635]/60 bg-[#DCE7C4]' : 'border-[#7F9635]/25'
-                                }`}
-                            >
-                                <input
-                                    type="radio"
-                                    name="paymentMethod"
-                                    value="cod"
-                                    checked={paymentMethod === 'cod'}
-                                    onChange={() => setPaymentMethod('cod')}
-                                    className="mt-1 h-5 w-5 shrink-0 accent-[#7F9635]"
-                                />
-                                <div>
-                                    <p className="font-semibold text-sm">{t('cartPage.codTitle', 'Thanh toán khi nhận hàng')}</p>
-                                    <p className="text-xs opacity-60 mt-0.5">
-                                        {t('cartPage.codDesc', 'Khách hàng thanh toán trực tiếp cho nhân viên giao hàng tại thời điểm nhận sản phẩm.')}
-                                    </p>
-                                </div>
-                            </label>
+
+                            <div className="mt-4 space-y-3">
+                                {/* Option 1: International Card (Stripe) */}
+                                <label
+                                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer border transition-colors ${
+                                        paymentMethod === 'stripe' ? 'border-[#7F9635]/80 bg-[#DCE7C4]' : 'border-[#7F9635]/25 hover:bg-[#EEF2E4]/40'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        value="stripe"
+                                        checked={paymentMethod === 'stripe'}
+                                        onChange={() => setPaymentMethod('stripe')}
+                                        className="mt-1 h-5 w-5 shrink-0 accent-[#7F9635]"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                                            <p className="font-semibold text-sm">
+                                                {t('cartPage.stripeTitle', 'Thẻ quốc tế (Visa / Mastercard / JCB / AMEX)')}
+                                            </p>
+                                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#7F9635] text-white">
+                                                Quốc tế & VN
+                                            </span>
+                                        </div>
+                                        <p className="text-xs opacity-70 mt-0.5">
+                                            {t('cartPage.stripeDesc', 'Cổng Stripe bảo mật toàn cầu, hỗ trợ thanh toán thẻ tín dụng và ghi nợ quốc tế.')}
+                                        </p>
+                                        <div className="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-white">
+                                            <span className="px-1.5 py-0.5 bg-blue-700 rounded">VISA</span>
+                                            <span className="px-1.5 py-0.5 bg-red-600 rounded">MASTERCARD</span>
+                                            <span className="px-1.5 py-0.5 bg-sky-700 rounded">JCB</span>
+                                            <span className="px-1.5 py-0.5 bg-emerald-700 rounded">AMEX</span>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                {/* Option 2: PayPal */}
+                                <label
+                                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer border transition-colors ${
+                                        paymentMethod === 'paypal' ? 'border-[#7F9635]/80 bg-[#DCE7C4]' : 'border-[#7F9635]/25 hover:bg-[#EEF2E4]/40'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        value="paypal"
+                                        checked={paymentMethod === 'paypal'}
+                                        onChange={() => setPaymentMethod('paypal')}
+                                        className="mt-1 h-5 w-5 shrink-0 accent-[#7F9635]"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                                            <p className="font-semibold text-sm">
+                                                {t('cartPage.paypalTitle', 'Ví điện tử PayPal')}
+                                            </p>
+                                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#003087] text-white">
+                                                PayPal Global
+                                            </span>
+                                        </div>
+                                        <p className="text-xs opacity-70 mt-0.5">
+                                            {t('cartPage.paypalDesc', 'Thanh toán quốc tế nhanh chóng, tiện lợi bằng tài khoản PayPal hoặc thẻ liên kết.')}
+                                        </p>
+                                    </div>
+                                </label>
+
+                                {/* Option 3: VietQR (Chuyển khoản ngân hàng) */}
+                                <label
+                                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer border transition-colors ${
+                                        paymentMethod === 'qr' ? 'border-[#7F9635]/80 bg-[#DCE7C4]' : 'border-[#7F9635]/25 hover:bg-[#EEF2E4]/40'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        value="qr"
+                                        checked={paymentMethod === 'qr'}
+                                        onChange={() => setPaymentMethod('qr')}
+                                        className="mt-1 h-5 w-5 shrink-0 accent-[#7F9635]"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                                            <p className="font-semibold text-sm">{t('cartPage.qrTitle', 'Quét mã QR để chuyển tiền')}</p>
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#3B5518]/15 text-[#3B5518]">
+                                                VietQR · MBBank
+                                            </span>
+                                        </div>
+                                        <p className="text-xs opacity-60 mt-0.5">
+                                            {t('cartPage.qrDesc', 'Hỗ trợ hầu hết các ngân hàng và ví điện tử tại Việt Nam.')}
+                                        </p>
+                                    </div>
+                                </label>
+
+                                {/* Option 4: COD */}
+                                <label
+                                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer border transition-colors ${
+                                        shippingRegion === 'international' ? 'opacity-40 cursor-not-allowed bg-gray-200/50' : paymentMethod === 'cod' ? 'border-[#7F9635]/80 bg-[#DCE7C4]' : 'border-[#7F9635]/25 hover:bg-[#EEF2E4]/40'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        value="cod"
+                                        disabled={shippingRegion === 'international'}
+                                        checked={paymentMethod === 'cod'}
+                                        onChange={() => setPaymentMethod('cod')}
+                                        className="mt-1 h-5 w-5 shrink-0 accent-[#7F9635]"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                                            <p className="font-semibold text-sm">{t('cartPage.codTitle', 'Thanh toán khi nhận hàng (COD)')}</p>
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-200 text-gray-700">
+                                                Chỉ nội địa VN
+                                            </span>
+                                        </div>
+                                        <p className="text-xs opacity-60 mt-0.5">
+                                            {t('cartPage.codDesc', 'Khách hàng thanh toán trực tiếp cho nhân viên giao hàng tại thời điểm nhận sản phẩm.')}
+                                        </p>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                     </div>
 
@@ -1162,29 +1477,29 @@ export default function GioHangPage() {
 
                                                             <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-[#3B5518]/75">
                                                                 <span className="rounded-full bg-[#EEF2E4] px-2.5 py-1">
-                                                                    Sản lượng:{' '}
+                                                                    {t('cartPage.yield', 'Sản lượng')}:{' '}
                                                                     {tea.volume && tea.volume > 0
-                                                                        ? `${tea.volume.toLocaleString('vi-VN')} kg/cây/năm`
+                                                                        ? `${tea.volume.toLocaleString('vi-VN')} ${isEn ? 'kg/tree/year' : 'kg/cây/năm'}`
                                                                         : '-'}
                                                                 </span>
                                                                 <span className="rounded-full bg-[#EEF2E4] px-2.5 py-1">
-                                                                    Loại cây: {tea.type || '-'}
+                                                                    {t('cartPage.treeType', 'Loại cây')}: {tea.type || '-'}
                                                                 </span>
                                                             </div>
 
                                                             {tea.seasons.map((season) => (
                                                                 <div key={season.label} className="mt-2.5 space-y-1 text-sm">
-                                                                    <p>{season.label} - 1 lần/năm</p>
+                                                                    <p>{season.label} - {isEn ? '1 harvest/year' : '1 lần/năm'}</p>
                                                                     <p>{season.variant}</p>
-                                                                    <p>Số lượng: {season.quantity.toLocaleString('vi-VN')} kg trà khô/năm</p>
-                                                                    <p>Đơn giá: {fmt(tea.price)}/kg</p>
+                                                                    <p>{t('cartPage.quantity', 'Số lượng')}: {season.quantity.toLocaleString('vi-VN')} {isEn ? 'kg dry tea/year' : 'kg trà khô/năm'}</p>
+                                                                    <p>{t('cartPage.unitPrice', 'Đơn giá')}: {fmt(tea.price)}/kg</p>
                                                                 </div>
                                                             ))}
 
                                                             {/* Planting note + action buttons */}
                                                             <div className="flex items-center justify-between mt-3">
                                                                 <span className="text-[11px] opacity-50 italic">
-                                                                    Nhận trồng cây trong {tea.plantingYears} năm
+                                                                    {isEn ? `Adoption period: ${tea.plantingYears} years` : `Nhận trồng cây trong ${tea.plantingYears} năm`}
                                                                 </span>
                                                                 <div className="flex items-center gap-2">
                                                                     {user && (
@@ -1276,14 +1591,16 @@ export default function GioHangPage() {
                                                                     </p>
                                                                 ) : (
                                                                     <p className="text-xs opacity-70 mt-1">
-                                                                        Màu: {product.variant}
+                                                                        {t('cartPage.variant', 'Màu')}: {product.variant}
                                                                     </p>
                                                                 )
                                                             ) : null}
 
                                                             {/* Quantity */}
                                                             <div className="flex items-center gap-2 mt-2">
-                                                                <span className="text-xs opacity-70">Số lượng</span>
+                                                                <span className="text-xs opacity-70">
+                                                                    {t('cartPage.quantity', 'Số lượng')}
+                                                                </span>
                                                                 <div className="flex items-center gap-0.5">
                                                                     <button
                                                                         onClick={() =>
@@ -1294,7 +1611,7 @@ export default function GioHangPage() {
                                                                             )
                                                                         }
                                                                         className="h-11 w-11 rounded bg-[#7F9635] flex items-center justify-center text-white text-base hover:bg-[#6F8532] transition-colors"
-                                                                        aria-label={`Giảm số lượng ${product.name}`}
+                                                                        aria-label={isEn ? `Decrease quantity of ${product.name}` : `Giảm số lượng ${product.name}`}
                                                                     >
                                                                         -
                                                                     </button>
@@ -1310,13 +1627,13 @@ export default function GioHangPage() {
                                                                             )
                                                                         }
                                                                         className="h-11 w-11 rounded bg-[#7F9635] flex items-center justify-center text-white text-base hover:bg-[#6F8532] transition-colors"
-                                                                        aria-label={`Tăng số lượng ${product.name}`}
+                                                                        aria-label={isEn ? `Increase quantity of ${product.name}` : `Tăng số lượng ${product.name}`}
                                                                     >
                                                                         +
                                                                     </button>
                                                                 </div>
                                                                 <span className="text-xs opacity-50">
-                                                                    {product.unit}
+                                                                    {isEn ? (product.unit === 'hộp' ? t('cartPage.unitBox', 'box') : product.unit === 'gói' ? t('cartPage.unitPack', 'pack') : product.unit) : product.unit}
                                                                 </span>
                                                             </div>
 
@@ -1347,9 +1664,14 @@ export default function GioHangPage() {
                                         <span className="font-source-serif-4 text-2xl lg:text-[28px] text-[#7F9635]">
                                             {t('cartPage.total', 'Tổng thanh toán')}
                                         </span>
-                                        <span className="text-[#7F9635] font-bold text-xl lg:text-2xl">
-                                            {fmt(total)}
-                                        </span>
+                                        <div className="text-right">
+                                            <span className="text-[#7F9635] font-bold text-xl lg:text-2xl block">
+                                                {fmt(total)}
+                                            </span>
+                                            <span className="text-xs text-[#3B5518]/70 font-semibold block mt-0.5">
+                                                ≈ {formatUsd(convertVndToUsd(total))}
+                                            </span>
+                                        </div>
                                     </div>
                                     <p className="text-right text-xs opacity-50 mt-1">
                                         {t('cartPage.shippingNotice', 'Chưa bao gồm phí ship 30-50k/đơn hàng')}
