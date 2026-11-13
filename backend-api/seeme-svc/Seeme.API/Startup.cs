@@ -10,6 +10,7 @@ using Seeme.Data.Context;
 using Seeme.Data.Repositories;
 using Seeme.Domain.IRepositories;
 using Seeme.Domain.Models.Auth;
+using Seeme.Domain.Models.User;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
@@ -34,11 +35,20 @@ namespace Seeme.API
                 b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
 
             // Configure JWT
-            var jwtSettings = Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+            var jwtSettings = Configuration.GetSection("JwtSettings").Get<JwtSettings>()
+                ?? throw new InvalidOperationException("Thiếu cấu hình JwtSettings.");
+            if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey) || Encoding.UTF8.GetByteCount(jwtSettings.SecretKey) < 32)
+            {
+                throw new InvalidOperationException(
+                    "JwtSettings:SecretKey chưa được đặt hoặc ngắn hơn 32 byte. Đặt biến môi trường JwtSettings__SecretKey trong .env (openssl rand -base64 48).");
+            }
             services.Configure<JwtSettings>(Configuration.GetSection("JwtSettings"));
 
             // Configure Email
             services.Configure<EmailSettings>(Configuration.GetSection("EmailSettings"));
+
+            // Configure User
+            services.Configure<UserSettings>(Configuration.GetSection("UserSettings"));
 
             // register web api controller
             services.AddControllers();

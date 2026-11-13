@@ -5,6 +5,7 @@ using Seeme.Domain.Models;
 using Seeme.Domain.Models.ReponseModel;
 using Seeme.Domain.Models.User;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using System;
 using System.Linq.Expressions;
 
@@ -13,12 +14,15 @@ namespace Seeme.Service.User;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly UserSettings _userSettings;
 
     public UserService(
-        IUserRepository userRepository
+        IUserRepository userRepository,
+        IOptions<UserSettings> userSettings
     )
     {
         _userRepository = userRepository;
+        _userSettings = userSettings.Value;
     }
 
     public async Task<Response<PagingDataModel<ManaUserResponseModel>>> GetPaging(
@@ -132,6 +136,12 @@ public class UserService : IUserService
             );
         }
 
+        if (string.IsNullOrWhiteSpace(_userSettings.DefaultPassword))
+        {
+            throw new InvalidOperationException(
+                "Chưa cấu hình UserSettings__DefaultPassword trong .env");
+        }
+
         var newUser = new Domain.Entities.User
         {
             FullName = $"{model.FirstName?.Trim() ?? string.Empty} {model.LastName?.Trim() ?? string.Empty}".Trim(),
@@ -140,7 +150,7 @@ public class UserService : IUserService
             BirthDate = model.BirthDate,
             Gender = model.Gender,
             // Default password
-            Password = BcryptHasher.HashPassword("Default@123"),
+            Password = BcryptHasher.HashPassword(_userSettings.DefaultPassword),
         };
         await _userRepository.CreateAsync(newUser);
 

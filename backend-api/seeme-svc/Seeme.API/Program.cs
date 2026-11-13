@@ -4,6 +4,7 @@ namespace Seeme.API
     {
         public static void Main(string[] args)
         {
+            DotEnv.Load();
             CreateHostBuilder(args).Build().Run();
         }
 

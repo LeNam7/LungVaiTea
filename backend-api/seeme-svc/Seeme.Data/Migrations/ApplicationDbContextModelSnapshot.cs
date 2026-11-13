@@ -160,11 +160,17 @@ namespace Seeme.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("AddressEn")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DescriptionEn")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
@@ -175,6 +181,9 @@ namespace Seeme.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameEn")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedDate")
@@ -382,6 +391,9 @@ namespace Seeme.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CollectionNameEn")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ColorOptions")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -391,6 +403,9 @@ namespace Seeme.Data.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DescriptionEn")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("GroupId")
@@ -413,8 +428,14 @@ namespace Seeme.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameEn")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PackagingName")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PackagingNameEn")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Price")
@@ -427,6 +448,9 @@ namespace Seeme.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("StorageInstructionsEn")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Total")
                         .HasColumnType("int");
 
@@ -437,8 +461,14 @@ namespace Seeme.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UserManualEn")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("VariantName")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VariantNameEn")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -507,6 +537,9 @@ namespace Seeme.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DescriptionEn")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("GardenId")
                         .HasColumnType("int");
 
@@ -531,6 +564,9 @@ namespace Seeme.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameEn")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Owner")
                         .HasColumnType("int");
 
@@ -550,6 +586,9 @@ namespace Seeme.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Type")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TypeEn")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedDate")
@@ -580,6 +619,9 @@ namespace Seeme.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DescriptionEn")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -591,6 +633,9 @@ namespace Seeme.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameEn")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Slug")

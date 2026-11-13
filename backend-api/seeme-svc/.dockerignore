@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+**/publish/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/wwwroot/uploads/
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose*.yml
+.env
+.env.*
+*.bat
+*.md

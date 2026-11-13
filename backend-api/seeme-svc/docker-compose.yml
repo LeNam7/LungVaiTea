@@ -1,0 +1,85 @@
+# =============================================================
+#  Lùng Vài Trà - Backend + SQL Server
+#  Hướng dẫn chi tiết: xem DEPLOY.md
+#
+#  Lần đầu:   cp .env.example .env   (rồi sửa mật khẩu/secret)
+#             docker compose up -d mssql
+#             docker compose --profile tools run --rm migrate
+#             docker compose up -d --build backend
+#  Deploy lại: git pull && docker compose up -d --build backend
+# =============================================================
+name: lungvai
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: lungvai-mssql
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Chua dat MSSQL_SA_PASSWORD trong .env}
+      MSSQL_MEMORY_LIMIT_MB: ${MSSQL_MEMORY_LIMIT_MB:-1024}
+    ports:
+      # Chỉ mở cho localhost của server (dùng SSH tunnel nếu cần kết nối từ máy dev)
+      - "127.0.0.1:${MSSQL_HOST_PORT:-1433}:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -b -Q 'SELECT 1' -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks: [lungvai-net]
+
+  backend:
+    build:
+      context: .
+      target: final
+    image: lungvaitra-backend:latest
+    container_name: lungvai-backend
+    restart: unless-stopped
+    depends_on:
+      mssql:
+        condition: service_healthy
+    # Mọi biến trong .env được đưa vào container. Biến dạng Section__Key sẽ ghi đè appsettings.json
+    # (vd: JwtSettings__SecretKey, EmailSettings__Password). Biến không khai báo thì giữ giá trị trong appsettings.json.
+    env_file: .env
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=mssql,1433;Database=${DB_NAME:-seeme-web};User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"
+    ports:
+      # Đặt BACKEND_BIND=127.0.0.1 khi đã có nginx reverse proxy phía trước
+      - "${BACKEND_BIND:-0.0.0.0}:${BACKEND_PORT:-5274}:5274"
+    volumes:
+      - uploads:/app/wwwroot/uploads
+      - dpkeys:/root/.aspnet/DataProtection-Keys
+    networks: [lungvai-net]
+
+  # Chạy EF Core migrations rồi tự thoát:
+  #   docker compose --profile tools run --rm migrate
+  migrate:
+    profiles: ["tools"]
+    build:
+      context: .
+      target: migrate
+    image: lungvaitra-backend-migrate:latest
+    depends_on:
+      mssql:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=mssql,1433;Database=${DB_NAME:-seeme-web};User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"
+    networks: [lungvai-net]
+
+# Đặt tên cố định để không phụ thuộc tên thư mục và tái sử dụng volume/network đã có trên server
+volumes:
+  mssql-data:
+    name: lungvai-mssql-data
+  uploads:
+    name: lungvai-uploads
+  dpkeys:
+    name: lungvai-dpkeys
+
+networks:
+  lungvai-net:
+    name: lungvai-net
