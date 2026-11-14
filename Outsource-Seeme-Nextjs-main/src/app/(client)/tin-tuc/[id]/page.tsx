@@ -180,11 +180,6 @@ const Page = async ({ params, searchParams }: Props) => {
             <img
               src={getImageUrl(blog.coverImage ?? blog.thumbnail)}
               alt={blog.title ?? "blog"}
-              onError={(e) => {
-                const img = e.currentTarget;
-                img.onerror = null;
-                img.src = "/images/blogdetail.png";
-              }}
               className="mx-auto w-full lg:max-w-[800px] max-h-[75vh] object-cover rounded-xl"
             />
             <div
@@ -214,11 +209,6 @@ const Page = async ({ params, searchParams }: Props) => {
                     <img
                       src={getImageUrl(item.coverImage ?? item.thumbnail)}
                       alt={item.title ?? "blog"}
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        img.onerror = null;
-                        img.src = "/images/blodemo.png";
-                      }}
                       className="w-full h-44 object-cover group-hover:scale-105"
                       style={{
                         willChange: "scale",
