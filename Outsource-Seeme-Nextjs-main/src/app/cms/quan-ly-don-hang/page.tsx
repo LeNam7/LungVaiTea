@@ -1424,6 +1424,30 @@ export default function QuanLyDonHangPage() {
                                                     <div className="font-medium">{remaining.toLocaleString('vi-VN')}₫</div>
                                                 </div>
                                             </div>
+                                            {deliveryInfo?.paymentTransaction && (
+                                                <div className="mt-3 rounded-[6px] border border-[#d3adf7] bg-[#f9f0ff] p-3 text-[12px] text-[#531dab]">
+                                                    <div className="font-semibold text-[#391085] flex items-center justify-between">
+                                                        <span>Chi tiết giao dịch quốc tế:</span>
+                                                        {deliveryInfo.totalAmountUsd && (
+                                                            <Tag color="purple">~${Number(deliveryInfo.totalAmountUsd).toFixed(2)} USD</Tag>
+                                                        )}
+                                                    </div>
+                                                    <div className="mt-1.5 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
+                                                        {deliveryInfo.paymentTransaction.id && (
+                                                            <p className="truncate"><b>Mã GD (TxID):</b> <span className="font-mono">{deliveryInfo.paymentTransaction.id}</span></p>
+                                                        )}
+                                                        {deliveryInfo.paymentTransaction.method && (
+                                                            <p><b>Cổng:</b> {String(deliveryInfo.paymentTransaction.method).toUpperCase()}</p>
+                                                        )}
+                                                        {deliveryInfo.paymentTransaction.cardBrand && (
+                                                            <p><b>Loại thẻ:</b> {deliveryInfo.paymentTransaction.cardBrand} {deliveryInfo.paymentTransaction.last4 ? `(**** ${deliveryInfo.paymentTransaction.last4})` : ''}</p>
+                                                        )}
+                                                        {deliveryInfo.paymentTransaction.paidAt && (
+                                                            <p><b>Thời gian:</b> {new Date(deliveryInfo.paymentTransaction.paidAt).toLocaleString('vi-VN')}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                             {!canceled && paymentState !== 'paid' && (
                                                 <div className="mt-3 flex flex-wrap items-center gap-3">
                                                     <Popconfirm

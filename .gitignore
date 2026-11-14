@@ -23,6 +23,8 @@ next-env.d.ts
 bin/
 obj/
 publish/
+**/wwwroot/uploads/*
+!**/wwwroot/uploads/.gitkeep
 .vs/
 *.user
 *.suo

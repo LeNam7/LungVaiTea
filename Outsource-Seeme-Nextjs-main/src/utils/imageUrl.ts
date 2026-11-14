@@ -1,6 +1,6 @@
 import {DOMAINS} from '@/utils/domain';
 
-const FALLBACK_STORAGE_ORIGIN = 'https://api.lungvaitea.vn';
+const FALLBACK_STORAGE_ORIGIN = 'https://api.seemevitraco.vn';
 
 export const getStorageOrigin = () =>
     (DOMAINS.STORAGE || DOMAINS.API || FALLBACK_STORAGE_ORIGIN).replace(/\/$/, '');

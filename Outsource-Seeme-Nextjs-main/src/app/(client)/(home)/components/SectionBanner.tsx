@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { HOME_COPY } from '@/constants/brand';
 import { useLanguage } from '@/context/LanguageContext';
 
-const VIDEO_ASSET_BASE_URL = process.env.NEXT_PUBLIC_VIDEO_ASSET_BASE_URL || '';
+const VIDEO_ASSET_BASE_URL = process.env.NEXT_PUBLIC_VIDEO_ASSET_BASE_URL || '/videos';
 const BANNER_ASSET_VERSION = '20260729';
 const DESKTOP_VIDEO_SRC = process.env.NEXT_PUBLIC_HOME_BANNER_VIDEO_DESKTOP || (VIDEO_ASSET_BASE_URL ? `${VIDEO_ASSET_BASE_URL}/home-banner-desktop-v7.mp4?v=${BANNER_ASSET_VERSION}` : undefined);
 const MOBILE_VIDEO_SRC = process.env.NEXT_PUBLIC_HOME_BANNER_VIDEO_MOBILE || (VIDEO_ASSET_BASE_URL ? `${VIDEO_ASSET_BASE_URL}/home-banner-mobile-v7.mp4?v=${BANNER_ASSET_VERSION}` : undefined);
