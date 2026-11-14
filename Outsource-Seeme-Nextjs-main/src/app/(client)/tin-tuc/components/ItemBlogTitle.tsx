@@ -23,6 +23,11 @@ const ItemBlogTitle = ({blog}: Props) => {
                 <img
                     src={getImageUrl(blog.coverImage ?? blog.thumbnail)}
                     alt={blog.title ?? 'blog'}
+                    onError={(e) => {
+                        const img = e.currentTarget;
+                        img.onerror = null;
+                        img.src = '/images/blodemo.png';
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105"
                     style={{willChange: 'scale', transition: 'scale 0.3s ease-out'}}
                 />

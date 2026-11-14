@@ -108,7 +108,9 @@ const SectionTinTuc = () => {
                                         src={getImageUrl(featured.coverImage ?? featured.thumbnail)}
                                         alt={featured.title ?? 'blog'}
                                         onError={(e) => {
-                                            e.currentTarget.src = '/images/shan-tuyet-tea-tree.jpg';
+                                            const img = e.currentTarget;
+                                            img.onerror = null;
+                                            img.src = '/images/shan-tuyet-tea-tree.jpg';
                                         }}
                                         className="w-full h-80 lg:h-96 object-cover group-hover:scale-105"
                                         style={{willChange: 'scale', transition: 'scale 0.3s ease-out'}}
@@ -140,7 +142,9 @@ const SectionTinTuc = () => {
                                         src={getImageUrl(blog.coverImage ?? blog.thumbnail)}
                                         alt={blog.title ?? 'blog'}
                                         onError={(e) => {
-                                            e.currentTarget.src = '/images/shan-tuyet-tea-tree.jpg';
+                                            const img = e.currentTarget;
+                                            img.onerror = null;
+                                            img.src = '/images/shan-tuyet-tea-tree.jpg';
                                         }}
                                         className="w-full h-36 lg:h-44 object-cover group-hover:scale-105"
                                         style={{willChange: 'scale', transition: 'scale 0.3s ease-out'}}
