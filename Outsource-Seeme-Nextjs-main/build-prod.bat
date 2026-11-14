@@ -1,1 +1,17 @@
-﻿@echo offchcp 65001 >nulecho ========================================================echo   LUNG VAI TEA - FRONTEND NEXT.JS (BUILD PRODUCTION)echo ========================================================echo.cd /d "%~dp0"call npm run buildif %ERRORLEVEL% NEQ 0 (    echo [ERROR] Build that bai!    pause    exit /b %ERRORLEVEL%)echo.echo [OK] Build Frontend Production hoan tat thanh cong!echo.pause
+@echo off
+chcp 65001 >nul
+echo ========================================================
+echo   LUNG VAI TEA - FRONTEND NEXT.JS (BUILD PRODUCTION)
+echo ========================================================
+echo.
+cd /d "%~dp0"
+call npm run build
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Build that bai!
+    pause
+    exit /b %ERRORLEVEL%
+)
+echo.
+echo [OK] Build Frontend Production hoan tat thanh cong!
+echo.
+pause
