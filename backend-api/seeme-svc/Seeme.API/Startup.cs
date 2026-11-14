@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
@@ -129,13 +129,18 @@ namespace Seeme.API
 
             app.UseStaticFiles();
 
-            app.UseSwagger();
-
-            app.UseSwaggerUI(c =>
+            // Swagger chi bat o moi truong dev: tren production no cong khai
+            // toan bo so do API cho nguoi la.
+            if (env.IsDevelopment())
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "SEEME.Service.Api v1");
-                c.RoutePrefix = "SEEME";
-            });
+                app.UseSwagger();
+
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SEEME.Service.Api v1");
+                    c.RoutePrefix = "SEEME";
+                });
+            }
 
             app.UseCors(builder => builder
                 .AllowAnyOrigin()

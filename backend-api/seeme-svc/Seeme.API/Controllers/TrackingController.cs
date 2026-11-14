@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Seeme.Domain.Models.Tracking;
 using Seeme.Service.Tracking;
 using static Seeme.Domain.Constant.Enumerations;
@@ -7,6 +8,7 @@ namespace Seeme.API.Controllers
 {
     [ApiController]
     [Route("api/tracking")]
+    [Authorize]
     public class TrackingController : ControllerBase
     {
         private readonly ITrackingService _trackingService;

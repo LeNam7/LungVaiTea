@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Seeme.Domain.Entities;
 using Seeme.Domain.Models;
@@ -10,6 +11,7 @@ namespace Seeme.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/tea-groups")]
+    [Authorize]
     public class TeaGroupController : ControllerBase
     {
         private readonly ILogger<TeaGroupController> _logger;
@@ -26,6 +28,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="param">Tham số phân trang</param>
         /// <returns>Danh sách nhóm trà phân trang</returns>
+        [AllowAnonymous]
         [HttpPost("paging")]
         public async Task<ActionResult> GetTeaGroupsPaging([FromBody] PaginationParam param)
         {
@@ -52,6 +55,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="slug">Slug của nhóm trà (vd: luc-tra)</param>
         /// <returns>Thông tin nhóm trà</returns>
+        [AllowAnonymous]
         [HttpGet("{slug}")]
         public async Task<ActionResult> GetTeaGroupBySlug(string slug)
         {
@@ -86,6 +90,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="group">Thông tin nhóm trà cần thêm</param>
         /// <returns>Nhóm trà vừa tạo</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult> AddTeaGroup([FromBody] TeaGroup group)
         {
@@ -121,6 +126,7 @@ namespace Seeme.API.Controllers
         /// <param name="slug">Slug của nhóm trà</param>
         /// <param name="group">Thông tin nhóm trà cần cập nhật</param>
         /// <returns>Nhóm trà sau khi cập nhật</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPut("{slug}")]
         public async Task<ActionResult> UpdateTeaGroup(string slug, [FromBody] TeaGroup group)
         {
@@ -163,6 +169,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="slug">Slug của nhóm trà</param>
         /// <returns>Kết quả xóa</returns>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{slug}")]
         public async Task<ActionResult> DeleteTeaGroup(string slug)
         {

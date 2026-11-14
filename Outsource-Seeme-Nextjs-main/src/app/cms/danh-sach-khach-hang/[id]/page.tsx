@@ -12,9 +12,9 @@ const {Title} = Typography;
 
 const ROLE_LABELS: Record<number, {label: string; color: string}> = {
     [Role.Admin]: {label: 'Quản trị viên', color: 'red'},
-    [Role.Staff]: {label: 'Nhân viên', color: 'blue'},
-    [Role.Owner]: {label: 'Chủ vườn', color: 'purple'},
+    [Role.Manager]: {label: 'Nhân viên', color: 'blue'},
     [Role.User]: {label: 'Khách hàng', color: 'green'},
+    [Role.Supervisor]: {label: 'Giám sát', color: 'purple'},
 };
 
 const GENDER_LABELS: Record<number, string> = {

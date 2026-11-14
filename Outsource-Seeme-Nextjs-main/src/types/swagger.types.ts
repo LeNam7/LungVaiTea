@@ -5,11 +5,12 @@
 // ---- Enums ----
 
 /** 1=Admin, 2=Staff, 3=Owner, 4=User */
+/** Khop Seeme.Domain/Constant/Enumerations.cs phia backend. */
 export enum Role {
   Admin = 1,
-  Staff = 2,
-  Owner = 3,
-  User = 4,
+  Manager = 2,
+  User = 3,
+  Supervisor = 4,
 }
 
 /** 0=Approved, 1=Processing, 2=Shipped, 3=Completed, 4=Canceled */

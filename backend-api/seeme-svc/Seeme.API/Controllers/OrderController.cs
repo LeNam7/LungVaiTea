@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Seeme.Domain.Constant;
 using Seeme.Domain.Models;
@@ -9,6 +10,7 @@ namespace Seeme.API.Controllers
 {
     [ApiController]
     [Route("api/order")]
+    [Authorize]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -21,6 +23,7 @@ namespace Seeme.API.Controllers
         /// <summary>
         /// Tạo đơn hàng mới
         /// </summary>
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult> CreateOrder([FromBody] CreateOrderRequestModel model)
         {
@@ -49,6 +52,7 @@ namespace Seeme.API.Controllers
         /// <summary>
         /// Lấy chi tiết đơn hàng theo Id
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult> GetOrderById(int id)
         {
@@ -70,6 +74,7 @@ namespace Seeme.API.Controllers
         /// <summary>
         /// Lấy danh sách đơn hàng phân trang (20 bản ghi/trang)
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPost("paging")]
         public async Task<ActionResult> GetOrdersPaging([FromBody] PaginationParam param)
         {
@@ -95,6 +100,7 @@ namespace Seeme.API.Controllers
         /// <summary>
         /// Lấy danh sách đơn hàng cây trà phân trang (20 bản ghi/trang)
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPost("teas/paging")]
         public async Task<ActionResult> GetOrderTeasPaging([FromBody] PaginationParam param)
         {
@@ -116,6 +122,7 @@ namespace Seeme.API.Controllers
         /// <summary>
         /// Lấy danh sách đơn hàng sản phẩm phân trang (20 bản ghi/trang)
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPost("products/paging")]
         public async Task<ActionResult> GetOrderProductsPaging([FromBody] PaginationParam param)
         {
@@ -137,6 +144,7 @@ namespace Seeme.API.Controllers
         /// <summary>
         /// Cập nhật trạng thái cho item đơn sản phẩm
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPut("product-status/{orderProductId}")]
         public async Task<ActionResult> UpdateOrderProductStatus(int orderProductId, [FromBody] Enumerations.OrderProductStatus status)
         {
@@ -158,6 +166,7 @@ namespace Seeme.API.Controllers
         /// <summary>
         /// Cập nhật trạng thái cho item đơn cây trà
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPut("tea-status/{orderTeaId}")]
         public async Task<ActionResult> UpdateOrderTeaStatus(int orderTeaId, [FromBody] Enumerations.OrderTeaStatus status)
         {
@@ -200,6 +209,7 @@ namespace Seeme.API.Controllers
         /// <summary>
         /// Cập nhật số tiền đã thanh toán của đơn hàng (admin đối soát tay)
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPut("payment/{orderId}")]
         public async Task<ActionResult> UpdateOrderPayment(int orderId, [FromBody] int totalPayment)
         {

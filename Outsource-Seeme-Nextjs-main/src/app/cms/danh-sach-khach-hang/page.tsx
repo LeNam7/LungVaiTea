@@ -36,19 +36,19 @@ const {Title} = Typography;
 
 const ROLE_LABELS: Record<number, {label: string; color: string}> = {
     [Role.Admin]: {label: 'Quản trị viên', color: 'red'},
-    [Role.Staff]: {label: 'Nhân viên', color: 'blue'},
-    [Role.Owner]: {label: 'Chủ vườn', color: 'purple'},
+    [Role.Manager]: {label: 'Nhân viên', color: 'blue'},
     [Role.User]: {label: 'Khách hàng', color: 'green'},
+    [Role.Supervisor]: {label: 'Giám sát', color: 'purple'},
 };
 
 /**
  * Chỉ 3 vai trò được dùng khi thêm/sửa người dùng: Quản trị viên, Nhân viên,
- * Khách hàng. "Chủ vườn" chỉ còn hiện ở các tài khoản cũ đã mang vai trò đó
- * (để admin gán lại dần); form không cho gán mới vai trò này nữa.
+ * Khách hàng. Vai trò Giám sát chỉ hiển thị cho tài khoản đã mang sẵn,
+ * form không cho gán mới.
  */
 const FORM_ROLE_OPTIONS = [
     {value: Role.Admin, label: 'Quản trị viên'},
-    {value: Role.Staff, label: 'Nhân viên'},
+    {value: Role.Manager, label: 'Nhân viên'},
     {value: Role.User, label: 'Khách hàng'},
 ];
 

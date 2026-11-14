@@ -1,5 +1,6 @@
 'use client';
 
+import { BOOKING_URL } from '@/utils/domain';
 import { MENUSCONST } from '@/utils/MENUS';
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -188,7 +189,7 @@ const HeaderClient = () => {
             case '/gioi-thieu': return t('nav.about', defaultTitle);
             case '/bo-suu-tap-cay-tra': return t('nav.teaCollections', defaultTitle);
             case '/san-pham-tra': return t('nav.teaProducts', defaultTitle);
-            case 'https://tea.anf-technology.com/': return t('nav.bookTeaRoom', defaultTitle);
+            case BOOKING_URL: return t('nav.bookTeaRoom', defaultTitle);
             case '/lien-he': return t('nav.contact', defaultTitle);
             case '/tin-tuc': return t('nav.news', defaultTitle);
             default: return defaultTitle;
@@ -846,7 +847,7 @@ const HeaderClient = () => {
                             )}
                         </Link>
                         <a
-                            href="https://tea.anf-technology.com/"
+                            href={BOOKING_URL}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 rounded-full bg-[#3B5518] px-2.5 py-1 text-xs font-semibold text-[#DED1B9] shadow-sm transition hover:bg-[#4A6720] hover:text-white shrink-0 cursor-pointer xl:gap-1.5 xl:px-3.5 xl:py-1.5 whitespace-nowrap"
@@ -1044,7 +1045,7 @@ const HeaderClient = () => {
                 })}
                 <div className="pt-3 pb-1">
                     <a
-                        href="https://tea.anf-technology.com/"
+                        href={BOOKING_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => setMobileMenuOpen(false)}

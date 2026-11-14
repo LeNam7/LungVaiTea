@@ -11,16 +11,9 @@ import {unwrapApiData} from '@/api/response';
 import type {User} from '@/types/user';
 
 const {Sider, Header, Content} = Layout;
+/** Role.Admin = 1 phia backend (Seeme.Domain/Constant/Enumerations.cs). */
+const ADMIN_ROLE = 1;
 
-/** SĐT quản trị viên được vào trang quản trị (cấu hình qua biến NEXT_PUBLIC_CMS_ADMIN_PHONE). */
-const CMS_ADMIN_PHONE = process.env.NEXT_PUBLIC_CMS_ADMIN_PHONE || '0123456789';
-
-/** Chuẩn hoá SĐT về dạng 0xxxxxxxxx để so sánh (chấp nhận cả +84...). */
-function normalizePhone(value: string | null | undefined): string {
-    const digits = (value ?? '').replace(/\D/g, '');
-    if (digits.startsWith('84') && digits.length === 11) return `0${digits.slice(2)}`;
-    return digits;
-}
 
 export default function CMSLayout({children}: {children: React.ReactNode}) {
     const [collapsed, setCollapsed] = useState(false);
@@ -68,9 +61,10 @@ export default function CMSLayout({children}: {children: React.ReactNode}) {
                     throw new Error('Không thể xác minh tài khoản CMS');
                 }
 
-                // Chỉ SĐT quản trị mới được vào CMS, tài khoản khác (dù đã
-                // đăng nhập) đều bị chặn ở đây.
-                if (normalizePhone(user.phoneNumber) !== CMS_ADMIN_PHONE) {
+                // Quyen vao CMS dua tren Role trong DB, khong con so sanh so dien thoai.
+
+                // Role.Admin = 1 (xem Enumerations.Role phia backend).
+                if (user.role !== ADMIN_ROLE) {
                     if (!cancelled) {
                         setDenied(true);
                         setAuthChecking(false);

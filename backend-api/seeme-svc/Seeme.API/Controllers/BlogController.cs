@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Seeme.Domain.Entities;
 using Seeme.Domain.Models;
 using Seeme.Domain.Models.Blog;
@@ -8,6 +9,7 @@ namespace Seeme.API.Controllers
 {
     [ApiController]
     [Route("api/blog")]
+    [Authorize]
     public class BlogController : ControllerBase
     {
         private readonly IBlogService _blogService;
@@ -22,6 +24,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="param">Tham số phân trang</param>
         /// <returns></returns>
+        [AllowAnonymous]
         [HttpPost("paging")]
         public async Task<ActionResult> GetPaging([FromBody] PaginationParam param)
         {
@@ -48,6 +51,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">Id của bài viết</param>
         /// <returns></returns>
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult> GetById(int id)
         {
@@ -74,6 +78,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="model">Dữ liệu bài viết</param>
         /// <returns></returns>
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult> Create([FromBody] CreateBlogInput model)
         {
@@ -110,6 +115,7 @@ namespace Seeme.API.Controllers
         /// <param name="id">Id của bài viết</param>
         /// <param name="model">Dữ liệu cập nhật</param>
         /// <returns></returns>
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(int id, [FromBody] UpdateBlogInput model)
         {
@@ -145,6 +151,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">Id của bài viết</param>
         /// <returns></returns>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id)
         {
@@ -180,6 +187,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
+        [AllowAnonymous]
         [HttpPost("send-contact")]
         public async Task<ActionResult> SendContact([FromBody] Contact model)
         {
@@ -206,6 +214,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="param"></param>
         /// <returns></returns>
+        [Authorize(Roles = "Admin")]
         [HttpPost("paging-contact")]
         public async Task<ActionResult> GetPagingContact([FromBody] PaginationParam param)
         {

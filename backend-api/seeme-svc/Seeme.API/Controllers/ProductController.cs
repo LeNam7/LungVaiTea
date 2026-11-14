@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Seeme.Domain.Entities;
 using Seeme.Domain.Models;
 using Seeme.Service.ProductService;
@@ -10,6 +11,7 @@ namespace Seeme.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/product")]
+    [Authorize]
     public class ProductController : ControllerBase
     {
         private readonly ILogger<ProductController> _logger;
@@ -33,6 +35,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="param">Tham số phân trang</param>
         /// <returns>Danh sách sản phẩm phân trang</returns>
+        [AllowAnonymous]
         [HttpPost("paging")]
         public async Task<ActionResult> GetProductsPaging([FromBody] PaginationParam param)
         {
@@ -59,6 +62,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">ID của sản phẩm</param>
         /// <returns>Thông tin sản phẩm</returns>
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult> GetProductById(int id)
         {
@@ -93,6 +97,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">ID của sản phẩm</param>
         /// <returns>Thông tin sản phẩm</returns>
+        [AllowAnonymous]
         [HttpGet("category/{id}")]
         public async Task<ActionResult> GetProductsCategoryById(int id)
         {
@@ -127,6 +132,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="garden">Thông tin sản phẩm cần thêm</param>
         /// <returns>Vườn trà vừa tạo</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult> AddProduct([FromBody] Product garden)
         {
@@ -162,6 +168,7 @@ namespace Seeme.API.Controllers
         /// <param name="id">ID của sản phẩm</param>
         /// <param name="garden">Thông tin sản phẩm cần cập nhật</param>
         /// <returns>Vườn trà sau khi cập nhật</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdateProduct(int id, [FromBody] Product garden)
         {
@@ -204,6 +211,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">ID của sản phẩm</param>
         /// <returns>Kết quả xóa</returns>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteProduct(int id)
         {
@@ -238,6 +246,7 @@ namespace Seeme.API.Controllers
         /// Chỉ tính dòng đơn đã hoàn thành (Status = Completed), loại đơn hủy.
         /// </summary>
         /// <returns>Danh sách {productId, soldCount} xếp theo số đã bán giảm dần</returns>
+        [AllowAnonymous]
         [HttpGet("sold-counts")]
         public async Task<ActionResult> GetSoldCounts()
         {

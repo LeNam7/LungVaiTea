@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // output: "standalone", // Dùng khi build Docker container
+  // Docker build bật biến này để sinh .next/standalone.
+  // Build thường (local/Vercel) không bị ảnh hưởng.
+  output: process.env.NEXT_OUTPUT_STANDALONE === "true" ? "standalone" : undefined,
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**" },

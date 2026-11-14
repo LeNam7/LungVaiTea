@@ -59,7 +59,7 @@ public class UserService : IUserService
                 FirstName = firstName,
                 LastName = lastName,
                 Email = item.Email,
-                Role = Enumerations.Role.User, // default when entity doesn't expose role
+                Role = item.Role,
                 DepartmentId = null,
                 DepartmentName = string.Empty,
                 IsBlock = item.IsBlock,
@@ -187,7 +187,7 @@ public class UserService : IUserService
             BirthDate = user.BirthDate,
             Gender = user.Gender,
             Email = user.Email,
-            Role = Enumerations.Role.User, // default
+            Role = user.Role,
             DepartmentId = null,
             DepartmentName = departmentName,
             Bio = string.Empty,

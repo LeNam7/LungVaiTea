@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Seeme.Domain.Entities;
 using Seeme.Domain.Models;
 using Seeme.Service.UserAddressService;
@@ -7,6 +8,7 @@ namespace Seeme.API.Controllers
 {
     [ApiController]
     [Route("api/user-address")]
+    [Authorize]
     public class UserAddressController : ControllerBase
     {
         private readonly IUserAddressService _userAddressService;

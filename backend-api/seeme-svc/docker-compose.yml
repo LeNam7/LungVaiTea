@@ -67,6 +67,9 @@ services:
     depends_on:
       mssql:
         condition: service_healthy
+    # Bắt buộc: Startup validate JwtSettings__SecretKey trước khi dựng DbContext,
+    # thiếu .env thì migrate chết với "Unable to create a 'DbContext'".
+    env_file: .env
     environment:
       ConnectionStrings__DefaultConnection: "Server=mssql,1433;Database=${DB_NAME:-seeme-web};User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"
     networks: [lungvai-net]

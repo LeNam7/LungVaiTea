@@ -29,6 +29,10 @@ public class JwtService : IJwtService
             new(ClaimTypes.Name, user.FullName),
             new(ClaimTypes.MobilePhone, user.PhoneNumber.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            // Role claim: bat buoc de [Authorize(Roles = "Admin")] hoat dong.
+            // Token phat truoc thay doi nay khong co claim nay -> nguoi dung
+            // phai dang nhap lai moi vao duoc khu vuc quan tri.
+            new(ClaimTypes.Role, user.Role.ToString()),
         };
 
         var token = new JwtSecurityToken(

@@ -8,3 +8,6 @@ export const BASE_DOMAINS = {
     path: process.env.NEXT_PUBLIC_PATH || '',
     serverIP: process.env.NEXT_PUBLIC_SERVER_IP || '',
 };
+
+// Trang dat phong tra (site rieng). Doi domain chi can sua NEXT_PUBLIC_BOOKING_URL.
+export const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || 'https://booking.lungvaitea.vn';

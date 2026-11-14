@@ -12,6 +12,7 @@ namespace Seeme.Domain.Entities
         public string Password { get; set; } = string.Empty;
         public DateTime? BirthDate { get; set; }
         public Gender Gender { get; set; } = Gender.Other;
+        public Role Role { get; set; } = Role.User;
         public bool IsBlock { get; set; } = false;
         public int FailedLoginAttempts { get; set; } = 0;
     }

@@ -5,6 +5,7 @@ import NextImage from 'next/image';
 import FadeInUp from '@/components/animations/FadeInUp';
 import AbsoluteBackground from '@/components/common/AbsoluteBackground';
 import { HOME_COPY } from '@/constants/brand';
+import { BOOKING_URL } from '@/utils/domain';
 import { useLanguage } from '@/context/LanguageContext';
 
 const CORE_VALUE_SLIDES = [
@@ -193,7 +194,7 @@ const SectionGiaTriCotLoi = () => {
                     </FadeInUp>
                     <FadeInUp delay={0.34} className="pt-2 flex justify-center w-full">
                         <a
-                            href="https://tea.anf-technology.com/"
+                            href={BOOKING_URL}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#2F4413] via-[#3B5518] to-[#4A6720] px-6 py-3 text-sm font-semibold text-[#FDFBF7] border border-[#C5A869]/50 shadow-[0_8px_24px_rgba(47,68,19,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)] transition-all duration-300 hover:border-[#E5C77D] hover:shadow-[0_12px_30px_rgba(59,85,24,0.45),0_0_20px_rgba(197,168,105,0.35)] hover:scale-[1.03] whitespace-nowrap cursor-pointer"
@@ -252,7 +253,7 @@ const SectionGiaTriCotLoi = () => {
                                 className="absolute top-[85%] left-0 w-auto -translate-y-1/2"
                             >
                                 <a
-                                    href="https://tea.anf-technology.com/"
+                                    href={BOOKING_URL}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="group inline-flex items-center gap-3.5 rounded-full bg-gradient-to-r from-[#2B3E12] via-[#3B5518] to-[#4A6720] px-7 py-3.5 text-sm xl:text-base font-semibold text-[#FDFBF7] border border-[#C5A869]/60 shadow-[0_10px_28px_rgba(47,68,19,0.35),0_0_15px_rgba(197,168,105,0.2),inset_0_1px_1px_rgba(255,255,255,0.25)] transition-all duration-300 hover:border-[#E5C77D] hover:shadow-[0_14px_36px_rgba(47,68,19,0.5),0_0_24px_rgba(229,199,125,0.4)] hover:scale-[1.03] whitespace-nowrap cursor-pointer"

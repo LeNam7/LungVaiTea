@@ -1,0 +1,1 @@
+﻿@echo offchcp 65001 >nulecho ========================================================echo   LUNG VAI TEA - FRONTEND NEXT.JS (DEVELOPMENT MODE)echo ========================================================echo.cd /d "%~dp0"npm run devpause

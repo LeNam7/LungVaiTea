@@ -9,6 +9,7 @@ namespace Seeme.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[Authorize]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -52,6 +53,7 @@ public class AuthController : ControllerBase
     /// </summary>
     /// <ParamPaging name="model"></ParamPaging>
     /// <returns></returns>
+    [AllowAnonymous]
     [HttpPost("refresh-token")]
     public async Task<ActionResult> RefreshToken(RefreshTokenModel model)
     {

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Seeme.Domain.Constant;
 using Seeme.Domain.Models;
 using Seeme.Domain.Models.User;
@@ -8,6 +9,7 @@ namespace Seeme.API.Controllers;
 
 [ApiController]
 [Route("api/user")]
+[Authorize]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -22,6 +24,7 @@ public class UserController : ControllerBase
     /// </summary>
     /// <ParamPaging name="param"></ParamPaging>
     /// <returns></returns>
+    [Authorize(Roles = "Admin")]
     [HttpPost("paging")]
     public async Task<ActionResult> GetPaging([FromBody] PaginationParam param)
     {
@@ -57,6 +60,7 @@ public class UserController : ControllerBase
     /// </summary>
     /// <ParamPaging name="param"></ParamPaging>
     /// <returns></returns>
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult> AddNewUserByAdmin([FromBody] CreateUserByAdminInput param)
     {
@@ -145,6 +149,7 @@ public class UserController : ControllerBase
     /// </summary>
     /// <ParamPaging name="id"></ParamPaging>
     /// <returns></returns>
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteUser(int id)
     {
@@ -172,6 +177,7 @@ public class UserController : ControllerBase
     /// <ParamPaging name="id"></ParamPaging>
     /// <ParamPaging name="param"></ParamPaging>
     /// <returns></returns>
+    [Authorize(Roles = "Admin")]
     [HttpPut("block/{id}")]
     public async Task<ActionResult> UpdateRole(int id)
     {

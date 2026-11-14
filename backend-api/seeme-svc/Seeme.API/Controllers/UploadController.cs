@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Seeme.Service.Upload;
 using Seeme.Domain.Models.ReponseModel;
@@ -8,6 +9,7 @@ namespace Seeme.API.Controllers
 {
     [ApiController]
     [Route("api/upload")]
+    [Authorize(Roles = "Admin")]
     public class UploadController : ControllerBase
     {
         private readonly IUploadService _uploadService;

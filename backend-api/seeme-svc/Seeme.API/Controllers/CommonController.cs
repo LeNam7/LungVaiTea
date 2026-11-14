@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Seeme.Domain.Entities;
 using Seeme.Domain.Models;
 using Seeme.Service.Tree;
@@ -7,6 +8,7 @@ namespace Seeme.API.Controllers
 {
     [ApiController]
     [Route("api/")]
+    [Authorize]
     public class CommonController : ControllerBase
     {
         private readonly ILogger<CommonController> _logger;
@@ -25,6 +27,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="param">Tham số phân trang</param>
         /// <returns>Danh sách vườn trà phân trang</returns>
+        [AllowAnonymous]
         [HttpPost("gardens/paging")]
         public async Task<ActionResult> GetGardensPaging([FromBody] PaginationParam param)
         {
@@ -51,6 +54,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">ID của vườn trà</param>
         /// <returns>Thông tin vườn trà</returns>
+        [AllowAnonymous]
         [HttpGet("gardens/{id}")]
         public async Task<ActionResult> GetGardenById(int id)
         {
@@ -85,6 +89,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="garden">Thông tin vườn trà cần thêm</param>
         /// <returns>Vườn trà vừa tạo</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPost("gardens")]
         public async Task<ActionResult> AddGarden([FromBody] Garden garden)
         {
@@ -120,6 +125,7 @@ namespace Seeme.API.Controllers
         /// <param name="id">ID của vườn trà</param>
         /// <param name="garden">Thông tin vườn trà cần cập nhật</param>
         /// <returns>Vườn trà sau khi cập nhật</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPut("gardens/{id}")]
         public async Task<ActionResult> UpdateGarden(int id, [FromBody] Garden garden)
         {
@@ -162,6 +168,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">ID của vườn trà</param>
         /// <returns>Kết quả xóa</returns>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("gardens/{id}")]
         public async Task<ActionResult> DeleteGarden(int id)
         {
@@ -200,6 +207,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="param">Tham số phân trang</param>
         /// <returns>Danh sách phân loại cây trà phân trang</returns>
+        [AllowAnonymous]
         [HttpPost("categories/paging")]
         public async Task<ActionResult> GetCategoriesPaging([FromBody] PaginationParam param)
         {
@@ -226,6 +234,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">ID của phân loại cây trà</param>
         /// <returns>Thông tin phân loại cây trà</returns>
+        [AllowAnonymous]
         [HttpGet("categories/{id}")]
         public async Task<ActionResult> GetCategoryTeaById(int id)
         {
@@ -260,6 +269,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="category">Thông tin phân loại cây trà cần thêm</param>
         /// <returns>Phân loại cây trà vừa tạo</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPost("categories")]
         public async Task<ActionResult> AddCategoryTea([FromBody] CategoryTea category)
         {
@@ -295,6 +305,7 @@ namespace Seeme.API.Controllers
         /// <param name="id">ID của phân loại cây trà</param>
         /// <param name="category">Thông tin phân loại cây trà cần cập nhật</param>
         /// <returns>Phân loại cây trà sau khi cập nhật</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPut("categories/{id}")]
         public async Task<ActionResult> UpdateCategoryTea(int id, [FromBody] CategoryTea category)
         {
@@ -337,6 +348,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">ID của phân loại cây trà</param>
         /// <returns>Kết quả xóa</returns>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("categories/{id}")]
         public async Task<ActionResult> DeleteCategoryTea(int id)
         {
@@ -375,6 +387,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="param">Tham số phân trang</param>
         /// <returns>Danh sách cây trà phân trang</returns>
+        [AllowAnonymous]
         [HttpPost("teas/paging")]
         public async Task<ActionResult> GetTeasPaging([FromBody] PaginationParam param)
         {
@@ -401,6 +414,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">ID của cây trà</param>
         /// <returns>Thông tin cây trà</returns>
+        [AllowAnonymous]
         [HttpGet("teas/{id}")]
         public async Task<ActionResult> GetTeaById(int id)
         {
@@ -465,6 +479,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="tea">Thông tin cây trà cần thêm</param>
         /// <returns>Cây trà vừa tạo</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPost("teas")]
         public async Task<ActionResult> AddTea([FromBody] Tea tea)
         {
@@ -500,6 +515,7 @@ namespace Seeme.API.Controllers
         /// <param name="id">ID của cây trà</param>
         /// <param name="tea">Thông tin cây trà cần cập nhật</param>
         /// <returns>Cây trà sau khi cập nhật</returns>
+        [Authorize(Roles = "Admin")]
         [HttpPut("teas/{id}")]
         public async Task<ActionResult> UpdateTea(int id, [FromBody] Tea tea)
         {
@@ -542,6 +558,7 @@ namespace Seeme.API.Controllers
         /// </summary>
         /// <param name="id">ID của cây trà</param>
         /// <returns>Kết quả xóa</returns>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("teas/{id}")]
         public async Task<ActionResult> DeleteTea(int id)
         {

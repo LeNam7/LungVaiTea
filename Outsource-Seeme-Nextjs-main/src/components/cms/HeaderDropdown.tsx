@@ -25,7 +25,7 @@ type ChangePasswordResponse = {
 
 const ROLE_LABELS: Record<number, string> = {
   [Role.Admin]: 'Quản trị viên',
-  [Role.Staff]: 'Nhân viên',
+  [Role.Manager]: 'Nhân viên',
 };
 
 const HeaderDropdown = ({user}: {user: User | null}) => {
