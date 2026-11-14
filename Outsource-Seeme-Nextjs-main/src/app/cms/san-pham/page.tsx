@@ -616,7 +616,7 @@ export default function SanPhamPage() {
                 width="96vw"
                 style={{top: 20}}
                 styles={{body: {overflow: 'hidden'}}}
-                destroyOnHidden
+                forceRender
             >
                 <Form form={lineForm} layout="vertical" className="mt-4">
                     <Row gutter={16}>
@@ -736,13 +736,25 @@ export default function SanPhamPage() {
                             key: 'quantity',
                             width: 110,
                             render: (_, r) => (
-                                <InputNumber
-                                    style={{width: '100%'}}
-                                    min={0}
-                                    addonAfter="gram"
-                                    value={r.quantity}
-                                    onChange={(v) => updateDraft(r.key, {quantity: Number(v ?? 0)})}
-                                />
+                                <Space.Compact style={{width: '100%'}}>
+                                    <InputNumber
+                                        style={{width: '100%'}}
+                                        min={0}
+                                        value={r.quantity}
+                                        onChange={(v) => updateDraft(r.key, {quantity: Number(v ?? 0)})}
+                                    />
+                                    <span style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        padding: '0 8px',
+                                        backgroundColor: '#fafafa',
+                                        border: '1px solid #d9d9d9',
+                                        borderLeft: 0,
+                                        borderRadius: '0 6px 6px 0',
+                                        fontSize: 12,
+                                        color: 'rgba(0, 0, 0, 0.45)',
+                                    }}>gram</span>
+                                </Space.Compact>
                             ),
                         },
                         {
